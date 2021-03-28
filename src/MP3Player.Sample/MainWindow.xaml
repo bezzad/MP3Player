@@ -3,10 +3,126 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MP3Player.Sample"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-
-    </Grid>
+        Title="MainWindow" Height="140" Width="900">
+    <DockPanel Margin="10">
+        <DockPanel Dock="Left" MaxWidth="200">
+            <Grid HorizontalAlignment="Center">
+                <Image Source="https://img.taaghche.ir/audioCover/18484.jpg?w=150" Width="64" Height="64" Stretch="UniformToFill">
+                    <Image.Clip>
+                        <RectangleGeometry RadiusX="5" RadiusY="5" Rect="0,0,64,64"/>
+                    </Image.Clip>
+                </Image>
+            </Grid>
+            <StackPanel VerticalAlignment="Center" Margin="16,0,0,0">
+                <TextBlock Text="Book Title" Foreground="{DynamicResource Brushes.ThemeForeground}" />
+                <TextBlock Text="Chapter Title" FontWeight="Light" Foreground="{DynamicResource Brushes.ThemeForeground}" />
+            </StackPanel>
+        </DockPanel>
+        <DockPanel Dock="Right" VerticalAlignment="Center">
+            <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        ToolTip="Download" Padding="0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
+            </Button>
+            <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        ToolTip="List" Padding="0" Margin="14,0,0,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
+            </Button>
+            <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
+                        ToolTip="Mute On/Off" Padding="0" Margin="14,0,0,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                <materialDesign:PackIcon Kind="VolumeHigh" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray3}"/>
+            </Button>
+            <Slider Width="50"
+                        TickFrequency="1" Margin="5,0" 
+                        ClipToBounds="False" 
+                        IsDirectionReversed="False"
+                        TickPlacement="None"
+                        IsMoveToPointEnabled="True"
+                        Orientation="Horizontal" 
+                        Minimum="1" Maximum="100"
+                        Focusable="False" Cursor="Hand"
+                        IsSnapToTickEnabled="True"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Value="25" >
+            </Slider>
+            <Button Background="Transparent" BorderThickness="0" Cursor="Hand" IsCancel="True"
+                        ToolTip="Close Player" Padding="0" Margin="40,0,0,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30">
+                <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="{DynamicResource Brushes.ThemeForeground}"/>
+            </Button>
+        </DockPanel>
+        <DockPanel MaxWidth="600">
+            <Grid DockPanel.Dock="Top" Margin="0,0,0,10" Width="400">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                    <ColumnDefinition />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" 
+                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                            BorderBrush="Transparent" BorderThickness="0"
+                            Background="Transparent">
+                    <materialDesign:PackIcon Kind="Speedometer" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
+                </Button>
+                <Button Grid.Column="1" 
+                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                            BorderBrush="Transparent" BorderThickness="0"
+                            Background="Transparent">
+                    <materialDesign:PackIcon Kind="Rewind10" Foreground="{DynamicResource Brushes.Gray3}" Height="24" Width="24" />
+                </Button>
+                <Button Grid.Column="2" 
+                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                            ToolTip="Play" Width="40" Height="40" 
+                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                            BorderBrush="Transparent" BorderThickness="0"
+                            Background="{DynamicResource Brushes.Gray1}">
+                    <materialDesign:PackIcon Kind="Play" Foreground="{DynamicResource Brushes.Gray3}" Height="32" Width="32" />
+                </Button>
+                <Button Grid.Column="3" 
+                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                            BorderBrush="Transparent" BorderThickness="0"
+                            Background="Transparent">
+                    <materialDesign:PackIcon Kind="FastForward10" Foreground="{DynamicResource Brushes.Gray3}" Height="24" Width="24" />
+                </Button>
+                <Button Grid.Column="4" 
+                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                            BorderBrush="Transparent" BorderThickness="0"
+                            Background="Transparent">
+                    <materialDesign:PackIcon Kind="TimerOutline" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
+                </Button>
+            </Grid>
+            <DockPanel Margin="10">
+                <TextBlock Text="04:17" DockPanel.Dock="Right" Foreground="{DynamicResource Brushes.Gray0}" />
+                <TextBlock Text="04:17" DockPanel.Dock="Left" Foreground="{DynamicResource Brushes.Gray0}" />
+                <Slider
+                        TickFrequency="1" Margin="12,0" 
+                        ClipToBounds="False" 
+                        IsDirectionReversed="False"
+                        AutoToolTipPlacement="TopLeft"
+                        AutoToolTipPrecision="0"
+                        TickPlacement="None"
+                        IsMoveToPointEnabled="True"
+                        Orientation="Horizontal" 
+                        Minimum="0" Maximum="1000"
+                        Focusable="False" Cursor="Hand"
+                        IsSnapToTickEnabled="True"
+                        Value="25" >
+                </Slider>
+            </DockPanel>
+        </DockPanel>
+    </DockPanel>
 </Window>
