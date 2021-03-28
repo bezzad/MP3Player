@@ -48,7 +48,7 @@
                         Focusable="False" Cursor="Hand"
                         IsSnapToTickEnabled="True"
                         HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Value="25" >
+                        Value="{Binding Volume}" >
             </Slider>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand" IsCancel="True"
                         ToolTip="Close Player" Padding="0" Margin="40,0,0,0"
@@ -125,7 +125,7 @@
                         Minimum="0" Maximum="1000"
                         Focusable="False" Cursor="Hand"
                         IsSnapToTickEnabled="True"
-                        Value="25" >
+                        Value="{Binding Position}" >
                 </Slider>
             </DockPanel>
         </DockPanel>
