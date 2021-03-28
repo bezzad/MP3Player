@@ -4,8 +4,9 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:sample="clr-namespace:MP3Player.Sample"
         mc:Ignorable="d"
-        Title="MainWindow" Height="140" Width="900">
+        Title="MainWindow" Height="150" Width="900">
     <DockPanel Margin="10">
         <DockPanel Dock="Left" MaxWidth="200">
             <Grid HorizontalAlignment="Center">
@@ -66,15 +67,15 @@
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" 
                             Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            ToolTip="Previous" Width="30" Height="30" Padding="0"
                             materialDesign:ShadowAssist.ShadowDepth="Depth0"
                             BorderBrush="Transparent" BorderThickness="0"
                             Background="Transparent">
-                    <materialDesign:PackIcon Kind="Speedometer" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
+                    <materialDesign:PackIcon Kind="SkipPrevious" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
                 </Button>
                 <Button Grid.Column="1" 
                             Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            ToolTip="Rewind 10sec" Width="30" Height="30" Padding="0"
                             materialDesign:ShadowAssist.ShadowDepth="Depth0"
                             BorderBrush="Transparent" BorderThickness="0"
                             Background="Transparent">
@@ -82,15 +83,19 @@
                 </Button>
                 <Button Grid.Column="2" 
                             Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Play" Width="40" Height="40" 
+                            Width="40" Height="40" 
+                            Command="{Binding PlayPauseCommand, Mode=OneWay}"
                             materialDesign:ShadowAssist.ShadowDepth="Depth0"
                             BorderBrush="Transparent" BorderThickness="0"
                             Background="{DynamicResource Brushes.Gray1}">
-                    <materialDesign:PackIcon Kind="Play" Foreground="{DynamicResource Brushes.Gray3}" Height="32" Width="32" />
+                    <Grid>
+                        <materialDesign:PackIcon Kind="Play" ToolTip="Play" Height="32" Width="32" sample:VisibilityHelper.IsCollapsed="{Binding IsPlaying, Mode=OneWay}" />
+                        <materialDesign:PackIcon Kind="Pause" ToolTip="Pause" Height="32" Width="32" sample:VisibilityHelper.IsVisible="{Binding IsPlaying, Mode=OneWay}" />
+                    </Grid>
                 </Button>
                 <Button Grid.Column="3" 
                             Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            ToolTip="Forward 10sec" Width="30" Height="30" Padding="0"
                             materialDesign:ShadowAssist.ShadowDepth="Depth0"
                             BorderBrush="Transparent" BorderThickness="0"
                             Background="Transparent">
@@ -98,11 +103,11 @@
                 </Button>
                 <Button Grid.Column="4" 
                             Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Play" Width="30" Height="30" Padding="0"
+                            ToolTip="Next track" Width="30" Height="30" Padding="0"
                             materialDesign:ShadowAssist.ShadowDepth="Depth0"
                             BorderBrush="Transparent" BorderThickness="0"
                             Background="Transparent">
-                    <materialDesign:PackIcon Kind="TimerOutline" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
+                    <materialDesign:PackIcon Kind="SkipNext" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
                 </Button>
             </Grid>
             <DockPanel Margin="10">
