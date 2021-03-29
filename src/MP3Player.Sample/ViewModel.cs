@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using MP3Player.Wave;
 
 namespace MP3Player.Sample
 {
