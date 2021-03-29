@@ -1,6 +1,7 @@
 ﻿using System;
+using MP3Player.Wave.WaveFormats;
 
-namespace MP3Player.Wave
+namespace MP3Player.Wave.FileFormats.MP3
 {
     /// <summary>
     /// Interface for MP3 frame by frame decoder

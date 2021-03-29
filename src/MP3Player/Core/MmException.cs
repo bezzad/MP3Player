@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MP3Player
+namespace MP3Player.Core
 {
     /// <summary>
     /// Summary description for MmException.

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MP3Player.Wave
+namespace MP3Player.Wave.FileFormats.MP3
 {
     /// <summary>
     /// Represents a Xing VBR header

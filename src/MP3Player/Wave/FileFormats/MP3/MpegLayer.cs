@@ -1,4 +1,4 @@
-﻿namespace MP3Player.Wave
+﻿namespace MP3Player.Wave.FileFormats.MP3
 {
     /// <summary>
     /// MPEG Layer flags

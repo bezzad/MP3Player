@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows.Input;
 using MP3Player.Wave;
+using MP3Player.Wave.WaveOutputs;
 
 namespace MP3Player.Sample
 {

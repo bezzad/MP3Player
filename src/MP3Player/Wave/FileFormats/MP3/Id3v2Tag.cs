@@ -4,7 +4,7 @@ using System.IO;
 using System.Text;
 using MP3Player.Utils;
 
-namespace MP3Player.Wave
+namespace MP3Player.Wave.FileFormats.MP3
 {
     /// <summary>
     /// An ID3v2 Tag

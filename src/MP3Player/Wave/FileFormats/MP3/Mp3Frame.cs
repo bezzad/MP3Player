@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace MP3Player.Wave
+namespace MP3Player.Wave.FileFormats.MP3
 {
     /// <summary>
     /// Represents an MP3 Frame

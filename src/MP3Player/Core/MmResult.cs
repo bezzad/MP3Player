@@ -1,4 +1,4 @@
-﻿namespace MP3Player
+﻿namespace MP3Player.Core
 {
     /// <summary>
     /// Windows multimedia error codes from mmsystem.h.
