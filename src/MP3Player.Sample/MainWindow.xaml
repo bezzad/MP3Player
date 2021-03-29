@@ -28,6 +28,7 @@
                 <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
+                    Command="{Binding OpenFilesCommand, Mode=OneWay}"
                         ToolTip="List" Padding="0" Margin="14,0,0,0"
                         HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
@@ -122,7 +123,7 @@
                         TickPlacement="None"
                         IsMoveToPointEnabled="True"
                         Orientation="Horizontal" 
-                        Minimum="0" Maximum="1000"
+                        Minimum="0" Maximum="{Binding MaxPosition, Mode=OneWay}"
                         Focusable="False" Cursor="Hand"
                         IsSnapToTickEnabled="True"
                         Value="{Binding Position}" >
