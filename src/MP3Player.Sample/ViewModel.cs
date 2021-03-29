@@ -6,7 +6,7 @@ namespace MP3Player.Sample
 {
     public class ViewModel : INotifyPropertyChanged
     {
-        private IWavePlayer _player;
+        private IWavePlayer wavePlayer;
         public event PropertyChangedEventHandler PropertyChanged;
         public double Position { get; set; }
         public int Volume { get; set; }
