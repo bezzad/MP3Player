@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
+using MP3Player.Wave.WaveProviders;
 
 namespace MP3Player.Sample
 {
@@ -15,13 +16,14 @@ namespace MP3Player.Sample
     {
         private IWavePlayer wavePlayer;
         private WaveStream reader;
+        private VolumeWaveProvider16 volumeProvider;
         private readonly DispatcherTimer timer = new DispatcherTimer();
         private string lastPlayed;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public double Position { get; set; }
         public double MaxPosition { get; set; } = 1000;
-        public int Volume { get; set; }
+        public float Volume { get; set; } = 100;
         public string InputPath { get; set; }
         public string DefaultDecompressionFormat { get; set; }
         public bool IsPlaying => wavePlayer != null && wavePlayer.PlaybackState == PlaybackState.Playing;
@@ -111,8 +113,10 @@ namespace MP3Player.Sample
             if (reader == null)
             {
                 reader = new Mp3FileReader(InputPath);
+                volumeProvider = new VolumeWaveProvider16(reader);
+                volumeProvider.Volume = Volume / 100;
                 lastPlayed = InputPath;
-                wavePlayer.Init(reader);
+                wavePlayer.Init(volumeProvider);
             }
             wavePlayer.Play();
             UpdatePlayerState();
@@ -140,7 +144,7 @@ namespace MP3Player.Sample
 
         private void OnVolumeChanged()
         {
-
+            volumeProvider.Volume = Volume / 100;
         }
 
         private void CreatePlayer()
