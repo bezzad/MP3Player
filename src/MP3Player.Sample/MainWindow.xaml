@@ -8,54 +8,40 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="150" Width="900">
     <DockPanel Margin="10">
-        <DockPanel Dock="Left" MaxWidth="200">
-            <Grid HorizontalAlignment="Center">
-                <Image Source="https://img.taaghche.ir/audioCover/18484.jpg?w=150" Width="64" Height="64" Stretch="UniformToFill">
-                    <Image.Clip>
-                        <RectangleGeometry RadiusX="5" RadiusY="5" Rect="0,0,64,64"/>
-                    </Image.Clip>
-                </Image>
-            </Grid>
-            <StackPanel VerticalAlignment="Center" Margin="16,0,0,0">
-                <TextBlock Text="Book Title" Foreground="{DynamicResource Brushes.ThemeForeground}" />
-                <TextBlock Text="Chapter Title" FontWeight="Light" Foreground="{DynamicResource Brushes.ThemeForeground}" />
-            </StackPanel>
-        </DockPanel>
-        <DockPanel Dock="Right" VerticalAlignment="Center">
+        <DockPanel Dock="Right" VerticalAlignment="Center" Margin="10">
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="Download" Padding="0"
+                        ToolTip="Streaming" Padding="0"
                         HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
                     Command="{Binding OpenFilesCommand, Mode=OneWay}"
-                        ToolTip="List" Padding="0" Margin="14,0,0,0"
+                        ToolTip="Files List" Padding="0" Margin="14,0,0,0"
                         HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="Mute On/Off" Padding="0" Margin="14,0,0,0"
-                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
-                <materialDesign:PackIcon Kind="VolumeHigh" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray3}"/>
+                    Command="{Binding MuteCommand}"
+                    Padding="0" Margin="14,0,0,0"
+                    HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                <Grid>
+                    <materialDesign:PackIcon Kind="VolumeHigh" ToolTip="Mute On" Height="24" Width="24" sample:VisibilityHelper.IsCollapsed="{Binding IsMute, Mode=OneWay}" />
+                    <materialDesign:PackIcon Kind="Mute" ToolTip="Mute Off" Height="24" Width="24" sample:VisibilityHelper.IsVisible="{Binding IsMute, Mode=OneWay}" />
+                </Grid>
             </Button>
-            <Slider Width="50"
-                        TickFrequency="1" Margin="5,0" 
-                        ClipToBounds="False" 
-                        IsDirectionReversed="False"
-                        TickPlacement="None"
-                        IsMoveToPointEnabled="True"
-                        Orientation="Horizontal" 
-                        Minimum="1" Maximum="100"
-                        Focusable="False" Cursor="Hand"
-                        IsSnapToTickEnabled="True"
-                        HorizontalAlignment="Right" VerticalAlignment="Center"
-                        Value="{Binding Volume}" >
+            <Slider Width="60"
+                    TickFrequency="1" Margin="5,0" 
+                    ClipToBounds="False" 
+                    IsDirectionReversed="False"
+                    TickPlacement="None"
+                    IsMoveToPointEnabled="True"
+                    Orientation="Horizontal" 
+                    Minimum="0" Maximum="100"
+                    Focusable="False" Cursor="Hand"
+                    IsSnapToTickEnabled="True"
+                    HorizontalAlignment="Right" VerticalAlignment="Center"
+                    Value="{Binding Volume}" >
             </Slider>
-            <Button Background="Transparent" BorderThickness="0" Cursor="Hand" IsCancel="True"
-                        ToolTip="Close Player" Padding="0" Margin="40,0,0,0"
-                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30">
-                <materialDesign:PackIcon Kind="Close" Width="24" Height="24" Foreground="{DynamicResource Brushes.ThemeForeground}"/>
-            </Button>
         </DockPanel>
         <DockPanel MaxWidth="600">
             <Grid DockPanel.Dock="Top" Margin="0,0,0,10" Width="400">

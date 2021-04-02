@@ -28,17 +28,25 @@ namespace MP3Player.Sample
         public string DefaultDecompressionFormat { get; set; }
         public bool IsPlaying => wavePlayer != null && wavePlayer.PlaybackState == PlaybackState.Playing;
         public bool IsStopped => wavePlayer == null || wavePlayer.PlaybackState == PlaybackState.Stopped;
+        public bool IsMute { get; set; }
         public ICommand OpenFilesCommand { get; set; }
         public ICommand PlayPauseCommand { get; set; }
         public ICommand NextCommand { get; set; }
         public ICommand PreviousCommand { get; set; }
+        public ICommand MuteCommand { get; set; }
 
         public ViewModel()
         {
             OpenFilesCommand = new RelayCommand(OnOpenFiles);
             PlayPauseCommand = new RelayCommand(OnPlayPause);
+            MuteCommand = new RelayCommand(OnMute);
             timer.Interval = TimeSpan.FromMilliseconds(500);
             timer.Tick += TimerOnTick;
+        }
+
+        private void OnMute()
+        {
+            IsMute = !IsMute;
         }
 
         private void OnOpenFiles()
@@ -144,7 +152,19 @@ namespace MP3Player.Sample
 
         private void OnVolumeChanged()
         {
-            volumeProvider.Volume = Volume / 100;
+            if (volumeProvider != null)
+            {
+                volumeProvider.Volume = Volume / 100;
+            }
+            IsMute = Volume == 0;
+        }
+
+        private void OnIsMuteChanged()
+        {
+            if (volumeProvider != null)
+            {
+                volumeProvider.Volume = IsMute ? 0 : Volume/100;
+            }
         }
 
         private void CreatePlayer()
