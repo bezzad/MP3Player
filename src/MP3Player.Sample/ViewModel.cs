@@ -25,6 +25,8 @@ namespace MP3Player.Sample
         public double Position { get; set; }
         public double MaxPosition { get; set; } = 1000;
         public float Volume { get; set; } = 100;
+        public TimeSpan Duration { get; set; }
+        public TimeSpan CurrentTime { get; set; }
         public string InputPath { get; set; }
         public string DefaultDecompressionFormat { get; set; }
         public bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
@@ -92,7 +94,7 @@ namespace MP3Player.Sample
             if (_reader != null)
             {
                 Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
-                OnPropertyChanged(nameof(Position));
+                CurrentTime = _reader.CurrentTime;
             }
         }
 
@@ -112,7 +114,7 @@ namespace MP3Player.Sample
 
         private void Play()
         {
-            if (String.IsNullOrEmpty(InputPath))
+            if (string.IsNullOrEmpty(InputPath))
             {
                 MessageBox.Show("Select a valid input file or URL first");
                 return;
@@ -129,10 +131,10 @@ namespace MP3Player.Sample
             if (_reader == null)
             {
                 _reader = new Mp3FileReader(InputPath);
-                _volumeProvider = new VolumeWaveProvider16(_reader);
-                _volumeProvider.Volume = Volume / 100;
+                _volumeProvider = new VolumeWaveProvider16(_reader) {Volume = Volume / 100};
                 _lastPlayed = InputPath;
                 _wavePlayer.Init(_volumeProvider);
+                Duration = _reader.TotalTime;
             }
             _wavePlayer.Play();
             UpdatePlayerState();

@@ -99,8 +99,8 @@
                 </Button>
             </Grid>
             <DockPanel Margin="10">
-                <TextBlock Text="04:17" DockPanel.Dock="Right" Foreground="{DynamicResource Brushes.Gray0}" />
-                <TextBlock Text="04:17" DockPanel.Dock="Left" Foreground="{DynamicResource Brushes.Gray0}" />
+                <TextBlock Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}}" DockPanel.Dock="Right"/>
+                <TextBlock Text="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}}" DockPanel.Dock="Left" />
                 <Slider
                         TickFrequency="1" Margin="12,0" 
                         ClipToBounds="False" 
