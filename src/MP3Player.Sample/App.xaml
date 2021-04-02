@@ -5,6 +5,11 @@
              StartupUri="MainWindow.xaml">
     <Application.Resources>
         <ResourceDictionary>
+            <ImageSource x:Key="PlayImage">Resources/PlayImage.png</ImageSource>
+            <ImageSource x:Key="PauseImage">Resources/PauseImage.png</ImageSource>
+            <ImageSource x:Key="NextImage">Resources/NextImage.png</ImageSource>
+            <ImageSource x:Key="PreviousImage">Resources/PreviousImage.png</ImageSource>
+
             <ResourceDictionary.MergedDictionaries>
                 <!-- Material Design -->
                 <materialDesign:CustomColorTheme BaseTheme="Light" PrimaryColor="#FF00A2A4" SecondaryColor="#FF00B1B5" />

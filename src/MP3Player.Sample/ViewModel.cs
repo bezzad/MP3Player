@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using MP3Player.Wave.WaveOutputs;
+using MP3Player.Wave.WaveProviders;
 using MP3Player.Wave.WaveStreams;
 using MP3Player.Wave.WinMM;
 using System;
@@ -7,8 +8,8 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
-using MP3Player.Wave.WaveProviders;
 
 namespace MP3Player.Sample
 {
@@ -22,6 +23,7 @@ namespace MP3Player.Sample
         private bool _isStreaming;
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public double PositionPercent => (double)(_reader?.Position ?? 0) / (_reader?.Length ?? 1);
         public double Position { get; set; }
         public double MaxPosition { get; set; } = 1000;
         public float Volume { get; set; } = 100;
@@ -32,9 +34,11 @@ namespace MP3Player.Sample
         public bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
         public bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
         public bool IsMute { get; set; }
+        public ImageSource TaskbarOverlay { get; set; }
         public ICommand OpenStreamingCommand { get; set; }
         public ICommand OpenFilesCommand { get; set; }
         public ICommand PlayPauseCommand { get; set; }
+        public ICommand StopCommand { get; set; }
         public ICommand NextCommand { get; set; }
         public ICommand PreviousCommand { get; set; }
         public ICommand MuteCommand { get; set; }
@@ -46,6 +50,7 @@ namespace MP3Player.Sample
             OpenStreamingCommand = new RelayCommand(OnStreaming);
             OpenFilesCommand = new RelayCommand(OnOpenFiles);
             PlayPauseCommand = new RelayCommand(OnPlayPause);
+            StopCommand = new RelayCommand(Stop);
             MuteCommand = new RelayCommand(OnMute);
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
@@ -116,6 +121,7 @@ namespace MP3Player.Sample
             if (_reader != null)
             {
                 Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
+                OnPropertyChanged(nameof(PositionPercent));
             }
         }
 
@@ -160,11 +166,13 @@ namespace MP3Player.Sample
             _wavePlayer.Play();
             UpdatePlayerState();
             _timer.Start();
+            TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
         }
 
         private void Stop()
         {
             _wavePlayer?.Stop();
+            TaskbarOverlay = null;
         }
 
         private void UpdatePlayerState()

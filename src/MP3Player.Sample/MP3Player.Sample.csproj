@@ -7,12 +7,30 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\NextImage.png" />
+    <None Remove="Resources\PauseImage.png" />
+    <None Remove="Resources\PlayImage.png" />
+    <None Remove="Resources\PreviousImage.png" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\NextImage.png" />
+    <Resource Include="Resources\PauseImage.png" />
+    <Resource Include="Resources\PlayImage.png" />
+    <Resource Include="Resources\PreviousImage.png" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="MaterialDesignThemes" Version="4.0.0" />
     <PackageReference Include="PropertyChanged.Fody" Version="3.3.3" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MP3Player\MP3Player.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
 </Project>
