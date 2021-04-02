@@ -44,6 +44,12 @@
                         IsInteractive="True" 
                         ImageSource="{StaticResource ResourceKey=PlayImage}"/>
                     <ThumbButtonInfo 
+                        DismissWhenClicked="False"
+                        Command="{Binding PlayPauseCommand, Mode=OneWay}" 
+                        Description="Play"
+                        IsInteractive="True" 
+                        ImageSource="{StaticResource ResourceKey=PauseImage}"/>
+                    <ThumbButtonInfo 
                         DismissWhenClicked="True"
                         Command="{Binding StopCommand, Mode=OneWay}" 
                         Description="Play"
