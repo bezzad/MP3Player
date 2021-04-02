@@ -101,20 +101,22 @@
             <DockPanel Margin="10">
                 <TextBlock Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}}" DockPanel.Dock="Right"/>
                 <TextBlock Text="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}}" DockPanel.Dock="Left" />
-                <Slider
-                        TickFrequency="1" Margin="12,0" 
-                        ClipToBounds="False" 
-                        IsDirectionReversed="False"
-                        AutoToolTipPlacement="TopLeft"
-                        AutoToolTipPrecision="0"
-                        TickPlacement="None"
-                        IsMoveToPointEnabled="True"
-                        Orientation="Horizontal" 
-                        Minimum="0" Maximum="{Binding MaxPosition, Mode=OneWay}"
-                        Focusable="False" Cursor="Hand"
-                        IsSnapToTickEnabled="True"
-                        Value="{Binding Position}" >
-                </Slider>
+                <sample:FormattedSlider
+                    Style="{StaticResource MaterialDesignSlider}"
+                    TickFrequency="1" Margin="12,0" 
+                    ClipToBounds="False" 
+                    IsDirectionReversed="False"
+                    AutoToolTipPlacement="TopLeft"
+                    AutoToolTipPrecision="0"
+                    AutoToolTipFormat="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}, UpdateSourceTrigger=PropertyChanged}"
+                    TickPlacement="None"
+                    IsMoveToPointEnabled="True"
+                    Orientation="Horizontal" 
+                    Minimum="0" Maximum="{Binding MaxPosition, Mode=OneWay}"
+                    Focusable="False" Cursor="Hand"
+                    IsSnapToTickEnabled="True"
+                    Value="{Binding Position}">
+                </sample:FormattedSlider>
             </DockPanel>
         </DockPanel>
     </DockPanel>

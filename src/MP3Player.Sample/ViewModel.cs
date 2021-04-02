@@ -94,7 +94,6 @@ namespace MP3Player.Sample
             if (_reader != null)
             {
                 Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
-                CurrentTime = _reader.CurrentTime;
             }
         }
 
@@ -157,6 +156,7 @@ namespace MP3Player.Sample
             if (_reader != null)
             {
                 _reader.Position = (long)(_reader.Length * Position / MaxPosition);
+                CurrentTime = _reader.CurrentTime;
             }
         }
 
