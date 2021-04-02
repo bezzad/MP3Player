@@ -12,13 +12,14 @@ using MP3Player.Wave.WaveProviders;
 
 namespace MP3Player.Sample
 {
-    public class ViewModel : INotifyPropertyChanged
+    public sealed class ViewModel : INotifyPropertyChanged
     {
-        private IWavePlayer wavePlayer;
-        private WaveStream reader;
-        private VolumeWaveProvider16 volumeProvider;
-        private readonly DispatcherTimer timer = new DispatcherTimer();
-        private string lastPlayed;
+        private IWavePlayer _wavePlayer;
+        private WaveStream _reader;
+        private VolumeWaveProvider16 _volumeProvider;
+        private readonly DispatcherTimer _timer = new DispatcherTimer();
+        private string _lastPlayed;
+        private bool _isStreaming;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public double Position { get; set; }
@@ -26,9 +27,10 @@ namespace MP3Player.Sample
         public float Volume { get; set; } = 100;
         public string InputPath { get; set; }
         public string DefaultDecompressionFormat { get; set; }
-        public bool IsPlaying => wavePlayer != null && wavePlayer.PlaybackState == PlaybackState.Playing;
-        public bool IsStopped => wavePlayer == null || wavePlayer.PlaybackState == PlaybackState.Stopped;
+        public bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
+        public bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
         public bool IsMute { get; set; }
+        public ICommand OpenStreamingCommand { get; set; }
         public ICommand OpenFilesCommand { get; set; }
         public ICommand PlayPauseCommand { get; set; }
         public ICommand NextCommand { get; set; }
@@ -37,18 +39,19 @@ namespace MP3Player.Sample
 
         public ViewModel()
         {
+            OpenStreamingCommand = new RelayCommand(OnStreaming);
             OpenFilesCommand = new RelayCommand(OnOpenFiles);
             PlayPauseCommand = new RelayCommand(OnPlayPause);
             MuteCommand = new RelayCommand(OnMute);
-            timer.Interval = TimeSpan.FromMilliseconds(500);
-            timer.Tick += TimerOnTick;
+            _timer.Interval = TimeSpan.FromMilliseconds(500);
+            _timer.Tick += TimerOnTick;
         }
 
-        private void OnMute()
+        private void OnStreaming()
         {
-            IsMute = !IsMute;
+            _isStreaming = true;
         }
-
+        
         private void OnOpenFiles()
         {
             var ofd = new OpenFileDialog();
@@ -56,9 +59,14 @@ namespace MP3Player.Sample
             {
                 if (TryOpenInputFile(ofd.FileName))
                 {
-                    TryOpenInputFile(ofd.FileName);
+                    _isStreaming = false;
                 }
             }
+        }
+
+        private void OnMute()
+        {
+            IsMute = !IsMute;
         }
 
         private bool TryOpenInputFile(string file)
@@ -81,9 +89,9 @@ namespace MP3Player.Sample
 
         private void TimerOnTick(object sender, EventArgs eventArgs)
         {
-            if (reader != null)
+            if (_reader != null)
             {
-                Position = Math.Min(MaxPosition, reader.Position * MaxPosition / reader.Length);
+                Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
                 OnPropertyChanged(nameof(Position));
             }
         }
@@ -98,7 +106,7 @@ namespace MP3Player.Sample
 
         private void Pause()
         {
-            wavePlayer?.Pause();
+            _wavePlayer?.Pause();
             UpdatePlayerState();
         }
 
@@ -109,31 +117,31 @@ namespace MP3Player.Sample
                 MessageBox.Show("Select a valid input file or URL first");
                 return;
             }
-            if (wavePlayer == null)
+            if (_wavePlayer == null)
             {
                 CreatePlayer();
             }
-            if (lastPlayed != InputPath && reader != null)
+            if (_lastPlayed != InputPath && _reader != null)
             {
-                reader.Dispose();
-                reader = null;
+                _reader.Dispose();
+                _reader = null;
             }
-            if (reader == null)
+            if (_reader == null)
             {
-                reader = new Mp3FileReader(InputPath);
-                volumeProvider = new VolumeWaveProvider16(reader);
-                volumeProvider.Volume = Volume / 100;
-                lastPlayed = InputPath;
-                wavePlayer.Init(volumeProvider);
+                _reader = new Mp3FileReader(InputPath);
+                _volumeProvider = new VolumeWaveProvider16(_reader);
+                _volumeProvider.Volume = Volume / 100;
+                _lastPlayed = InputPath;
+                _wavePlayer.Init(_volumeProvider);
             }
-            wavePlayer.Play();
+            _wavePlayer.Play();
             UpdatePlayerState();
-            timer.Start();
+            _timer.Start();
         }
 
         private void Stop()
         {
-            wavePlayer?.Stop();
+            _wavePlayer?.Stop();
         }
 
         private void UpdatePlayerState()
@@ -144,41 +152,41 @@ namespace MP3Player.Sample
 
         private void OnPositionChanged()
         {
-            if (reader != null)
+            if (_reader != null)
             {
-                reader.Position = (long)(reader.Length * Position / MaxPosition);
+                _reader.Position = (long)(_reader.Length * Position / MaxPosition);
             }
         }
 
         private void OnVolumeChanged()
         {
-            if (volumeProvider != null)
+            if (_volumeProvider != null)
             {
-                volumeProvider.Volume = Volume / 100;
+                _volumeProvider.Volume = Volume / 100;
             }
             IsMute = Volume == 0;
         }
 
         private void OnIsMuteChanged()
         {
-            if (volumeProvider != null)
+            if (_volumeProvider != null)
             {
-                volumeProvider.Volume = IsMute ? 0 : Volume/100;
+                _volumeProvider.Volume = IsMute ? 0 : Volume/100;
             }
         }
 
         private void CreatePlayer()
         {
-            wavePlayer = new WaveOutEvent();
-            wavePlayer.PlaybackStopped += WavePlayerOnPlaybackStopped;
+            _wavePlayer = new WaveOutEvent();
+            _wavePlayer.PlaybackStopped += WavePlayerOnPlaybackStopped;
         }
 
         private void WavePlayerOnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
         {
-            if (reader != null)
+            if (_reader != null)
             {
                 Position = 0;
-                timer.Stop();
+                _timer.Stop();
             }
             if (stoppedEventArgs.Exception != null)
             {
@@ -189,15 +197,15 @@ namespace MP3Player.Sample
             OnPropertyChanged(nameof(IsStopped));
         }
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         public void Dispose()
         {
-            wavePlayer?.Dispose();
-            reader?.Dispose();
+            _wavePlayer?.Dispose();
+            _reader?.Dispose();
         }
     }
 }

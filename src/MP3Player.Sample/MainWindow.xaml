@@ -10,14 +10,15 @@
     <DockPanel Margin="10">
         <DockPanel Dock="Right" VerticalAlignment="Center" Margin="10">
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        ToolTip="Streaming" Padding="0"
-                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                    Command="{Binding OpenStreamingCommand, Mode=OneWay}"
+                    ToolTip="Streaming" Padding="0"
+                    HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
                     Command="{Binding OpenFilesCommand, Mode=OneWay}"
-                        ToolTip="Files List" Padding="0" Margin="14,0,0,0"
-                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                    ToolTip="Files List" Padding="0" Margin="14,0,0,0"
+                    HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
