@@ -38,6 +38,8 @@ namespace MP3Player.Sample
         public ICommand NextCommand { get; set; }
         public ICommand PreviousCommand { get; set; }
         public ICommand MuteCommand { get; set; }
+        public ICommand BackwardCommand { get; set; }
+        public ICommand ForwardCommand { get; set; }
 
         public ViewModel()
         {
@@ -45,15 +47,35 @@ namespace MP3Player.Sample
             OpenFilesCommand = new RelayCommand(OnOpenFiles);
             PlayPauseCommand = new RelayCommand(OnPlayPause);
             MuteCommand = new RelayCommand(OnMute);
+            ForwardCommand = new RelayCommand(OnForward);
+            BackwardCommand = new RelayCommand(OnBackward);
             _timer.Interval = TimeSpan.FromMilliseconds(500);
             _timer.Tick += TimerOnTick;
+        }
+
+        private void OnBackward()
+        {
+            if (_reader != null)
+            {
+                _reader.Position = Math.Max(_reader.Position - (long)_reader.WaveFormat.AverageBytesPerSecond * 10, 0);
+                OnPropertyChanged(nameof(Position));
+            }
+        }
+
+        private void OnForward()
+        {
+            if (_reader != null)
+            {
+                _reader.Position = Math.Min(_reader.Position + (long)_reader.WaveFormat.AverageBytesPerSecond * 10, _reader.Length-1);
+                OnPropertyChanged(nameof(Position));
+            }
         }
 
         private void OnStreaming()
         {
             _isStreaming = true;
         }
-        
+
         private void OnOpenFiles()
         {
             var ofd = new OpenFileDialog();
@@ -130,7 +152,7 @@ namespace MP3Player.Sample
             if (_reader == null)
             {
                 _reader = new Mp3FileReader(InputPath);
-                _volumeProvider = new VolumeWaveProvider16(_reader) {Volume = Volume / 100};
+                _volumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
                 _lastPlayed = InputPath;
                 _wavePlayer.Init(_volumeProvider);
                 Duration = _reader.TotalTime;

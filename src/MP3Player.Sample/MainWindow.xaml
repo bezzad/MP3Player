@@ -62,11 +62,12 @@
                     <materialDesign:PackIcon Kind="SkipPrevious" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
                 </Button>
                 <Button Grid.Column="1" 
-                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Rewind 10sec" Width="30" Height="30" Padding="0"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
-                            BorderBrush="Transparent" BorderThickness="0"
-                            Background="Transparent">
+                        Command="{Binding BackwardCommand, Mode=OneWay}"
+                        Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                        ToolTip="Rewind 10sec" Width="30" Height="30" Padding="0"
+                        materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                        BorderBrush="Transparent" BorderThickness="0"
+                        Background="Transparent">
                     <materialDesign:PackIcon Kind="Rewind10" Foreground="{DynamicResource Brushes.Gray3}" Height="24" Width="24" />
                 </Button>
                 <Button Grid.Column="2" 
@@ -82,11 +83,12 @@
                     </Grid>
                 </Button>
                 <Button Grid.Column="3" 
-                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Forward 10sec" Width="30" Height="30" Padding="0"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
-                            BorderBrush="Transparent" BorderThickness="0"
-                            Background="Transparent">
+                        Command="{Binding ForwardCommand, Mode=OneWay}"
+                        Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                        ToolTip="Forward 10sec" Width="30" Height="30" Padding="0"
+                        materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                        BorderBrush="Transparent" BorderThickness="0"
+                        Background="Transparent">
                     <materialDesign:PackIcon Kind="FastForward10" Foreground="{DynamicResource Brushes.Gray3}" Height="24" Width="24" />
                 </Button>
                 <Button Grid.Column="4" 
