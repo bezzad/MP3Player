@@ -40,41 +40,50 @@
     </Window.TaskbarItemInfo>
 
     <DockPanel Margin="10">
-        <DockPanel Dock="Right" VerticalAlignment="Center" Margin="10">
+        <DockPanel Dock="Right" VerticalAlignment="Top" Margin="10" Height="50">
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
-                    Command="{Binding OpenStreamingCommand, Mode=OneWay}"
-                    ToolTip="Streaming" Padding="0"
-                    HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                        Command="{Binding OpenStreamingCommand, Mode=OneWay}"
+                        ToolTip="Streaming" Padding="0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="24" Height="24" />
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
-                    Command="{Binding OpenFilesCommand, Mode=OneWay}"
-                    ToolTip="Open MP3 File" Padding="0" Margin="14,0,0,0"
-                    HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                        Command="{Binding OpenFilesCommand, Mode=OneWay}"
+                        ToolTip="Open MP3 File" Padding="0" Margin="14,0,0,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" />
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
-                    Command="{Binding MuteCommand}"
-                    Padding="0" Margin="14,0,0,0"
-                    HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
+                        Command="{Binding MuteCommand}"
+                        Padding="0" Margin="14,0,0,0"
+                        HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <Grid>
                     <materialDesign:PackIcon Kind="VolumeHigh" ToolTip="Mute On" Height="24" Width="24" sample:VisibilityHelper.IsCollapsed="{Binding IsMute, Mode=OneWay}" />
                     <materialDesign:PackIcon Kind="Mute" ToolTip="Mute Off" Height="24" Width="24" sample:VisibilityHelper.IsVisible="{Binding IsMute, Mode=OneWay}" />
                 </Grid>
             </Button>
             <Slider Width="60"
-                    TickFrequency="1" Margin="5,0" 
-                    ClipToBounds="False" 
-                    IsDirectionReversed="False"
-                    TickPlacement="None"
-                    IsMoveToPointEnabled="True"
-                    Orientation="Horizontal" 
-                    Minimum="0" Maximum="100"
-                    Focusable="False" Cursor="Hand"
-                    IsSnapToTickEnabled="True"
-                    HorizontalAlignment="Right" VerticalAlignment="Center"
-                    Value="{Binding Volume}" >
+                        TickFrequency="1" Margin="5,0" 
+                        ClipToBounds="False" 
+                        IsDirectionReversed="False"
+                        TickPlacement="None"
+                        IsMoveToPointEnabled="True"
+                        Orientation="Horizontal" 
+                        Minimum="0" Maximum="100"
+                        Focusable="False" Cursor="Hand"
+                        IsSnapToTickEnabled="True"
+                        HorizontalAlignment="Right" VerticalAlignment="Center"
+                        Value="{Binding Volume}" >
             </Slider>
+        </DockPanel>
+        <DockPanel Dock="Bottom" Height="80" 
+                   Margin="10,20,10,0" VerticalAlignment="Center"
+                   sample:VisibilityHelper.IsVisible="{Binding IsStreaming, Mode=OneWay}">
+            <TextBox Height="50"
+                     Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                     Text="{Binding InputPath, Mode=TwoWay}"
+                     materialDesign:HintAssist.Hint="Streaming URL"
+                     materialDesign:HintAssist.HelperTextFontSize="16" />
         </DockPanel>
         <DockPanel MaxWidth="600">
             <Grid DockPanel.Dock="Top" Margin="0,0,0,10" Width="400">

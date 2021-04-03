@@ -29,7 +29,7 @@ namespace MP3Player.Sample
         private VolumeWaveProvider16 _volumeProvider;
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private string _lastPlayed;
-        private bool _isStreaming;
+        public bool IsStreaming { get; set; }
 
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
@@ -112,7 +112,7 @@ namespace MP3Player.Sample
 
         private void OnStreaming()
         {
-            _isStreaming = true;
+            IsStreaming = true;
         }
 
         private void OnOpenFiles()
@@ -126,7 +126,7 @@ namespace MP3Player.Sample
                     using var tempReader = new Mp3FileReader(ofd.FileName);
                     DefaultDecompressionFormat = tempReader.WaveFormat.ToString();
                     InputPath = ofd.FileName;
-                    _isStreaming = false;
+                    IsStreaming = false;
                     AppTitle = $"Simple MP3 Player  ({Path.GetFileName(InputPath)})";
                 }
             }
