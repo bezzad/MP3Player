@@ -6,7 +6,8 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:sample="clr-namespace:MP3Player.Sample"
         mc:Ignorable="d"
-        Title="{Binding AppTitle, Mode=OneWay}" Height="150" Width="900">
+        SizeToContent="WidthAndHeight" ResizeMode="NoResize"
+        Title="{Binding AppTitle, Mode=OneWay}" MinHeight="150" Height="150" Width="900">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo Description="Sample MP3 Player" 
                          ThumbnailClipMargin="0"
