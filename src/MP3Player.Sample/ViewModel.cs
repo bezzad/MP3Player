@@ -13,7 +13,7 @@ using System.Windows.Threading;
 
 namespace MP3Player.Sample
 {
-    public sealed class ViewModel : INotifyPropertyChanged
+    public sealed class ViewModel : INotifyPropertyChanged, IDisposable
     {
         private IWavePlayer _wavePlayer;
         private WaveStream _reader;
@@ -55,7 +55,7 @@ namespace MP3Player.Sample
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
             _timer.Interval = TimeSpan.FromMilliseconds(500);
-            _timer.Tick += TimerOnTick;
+            _timer.Tick += Tick;
         }
 
         private void OnBackward()
@@ -83,46 +83,27 @@ namespace MP3Player.Sample
 
         private void OnOpenFiles()
         {
-            var ofd = new OpenFileDialog();
-            if (ofd.ShowDialog() == true)
+            try
             {
-                if (TryOpenInputFile(ofd.FileName))
+                var ofd = new OpenFileDialog();
+                if (ofd.ShowDialog() == true)
                 {
+                    Stop();
+                    using var tempReader = new Mp3FileReader(ofd.FileName);
+                    DefaultDecompressionFormat = tempReader.WaveFormat.ToString();
+                    InputPath = ofd.FileName;
                     _isStreaming = false;
                 }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show($"Not a supported input file ({e.Message})");
             }
         }
 
         private void OnMute()
         {
             IsMute = !IsMute;
-        }
-
-        private bool TryOpenInputFile(string file)
-        {
-            bool isValid = false;
-            try
-            {
-                Stop();
-                using var tempReader = new Mp3FileReader(file);
-                DefaultDecompressionFormat = tempReader.WaveFormat.ToString();
-                InputPath = file;
-                isValid = true;
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show($"Not a supported input file ({e.Message})");
-            }
-            return isValid;
-        }
-
-        private void TimerOnTick(object sender, EventArgs eventArgs)
-        {
-            if (_reader != null)
-            {
-                Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
-                OnPropertyChanged(nameof(PositionPercent));
-            }
         }
 
         private void OnPlayPause()
@@ -137,6 +118,8 @@ namespace MP3Player.Sample
         {
             _wavePlayer?.Pause();
             UpdatePlayerState();
+            _timer?.Stop();
+            TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
         }
 
         private void Play()
@@ -173,6 +156,17 @@ namespace MP3Player.Sample
         {
             _wavePlayer?.Stop();
             TaskbarOverlay = null;
+            _timer?.Stop();
+            Position = 0;
+        }
+
+        private void Tick(object sender, EventArgs eventArgs)
+        {
+            if (_reader != null)
+            {
+                Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
+                OnPropertyChanged(nameof(PositionPercent));
+            }
         }
 
         private void UpdatePlayerState()
@@ -187,6 +181,7 @@ namespace MP3Player.Sample
             {
                 _reader.Position = (long)(_reader.Length * Position / MaxPosition);
                 CurrentTime = _reader.CurrentTime;
+                OnPropertyChanged(nameof(PositionPercent));
             }
         }
 
@@ -210,10 +205,10 @@ namespace MP3Player.Sample
         private void CreatePlayer()
         {
             _wavePlayer = new WaveOutEvent();
-            _wavePlayer.PlaybackStopped += WavePlayerOnPlaybackStopped;
+            _wavePlayer.PlaybackStopped += OnPlaybackStopped;
         }
 
-        private void WavePlayerOnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
+        private void OnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
         {
             if (_reader != null)
             {

@@ -11,6 +11,7 @@
     <None Remove="Resources\PauseImage.png" />
     <None Remove="Resources\PlayImage.png" />
     <None Remove="Resources\PreviousImage.png" />
+    <None Remove="Resources\StopImage.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,6 +19,7 @@
     <Resource Include="Resources\PauseImage.png" />
     <Resource Include="Resources\PlayImage.png" />
     <Resource Include="Resources\PreviousImage.png" />
+    <Resource Include="Resources\StopImage.png" />
   </ItemGroup>
 
   <ItemGroup>

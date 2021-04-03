@@ -7,28 +7,6 @@
         xmlns:sample="clr-namespace:MP3Player.Sample"
         mc:Ignorable="d"
         Title="MainWindow" Height="150" Width="900">
-
-    <Window.Resources>
-        <DrawingImage x:Key="PlayImage">
-            <DrawingImage.Drawing>
-                <DrawingGroup>
-                    <DrawingGroup.Children>
-                        <GeometryDrawing Brush="Green" Geometry="F1 M 50,25L 0,0L 0,50L 50,25 Z "/>
-                    </DrawingGroup.Children>
-                </DrawingGroup>
-            </DrawingImage.Drawing>
-        </DrawingImage>
-        <DrawingImage x:Key="StopImage">
-            <DrawingImage.Drawing>
-                <DrawingGroup>
-                    <DrawingGroup.Children>
-                        <GeometryDrawing Brush="Gray" Geometry="F1 M 0,0L 50,0L 50,50L 0,50L 0,0 Z "/>
-                    </DrawingGroup.Children>
-                </DrawingGroup>
-            </DrawingImage.Drawing>
-        </DrawingImage>
-    </Window.Resources>
-
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo Description="Sample MP3 Player" 
                          ThumbnailClipMargin="0"

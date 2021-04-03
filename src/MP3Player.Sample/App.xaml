@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <ImageSource x:Key="PlayImage">Resources/PlayImage.png</ImageSource>
             <ImageSource x:Key="PauseImage">Resources/PauseImage.png</ImageSource>
+            <ImageSource x:Key="StopImage">Resources/StopImage.png</ImageSource>
             <ImageSource x:Key="NextImage">Resources/NextImage.png</ImageSource>
             <ImageSource x:Key="PreviousImage">Resources/PreviousImage.png</ImageSource>
 
