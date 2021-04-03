@@ -10,9 +10,17 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using PropertyChanged;
 
 namespace MP3Player.Sample
 {
+    public enum Speed
+    {
+        Normal,
+        Fast,
+        Fastest
+    }
+
     public sealed class ViewModel : INotifyPropertyChanged, IDisposable
     {
         private IWavePlayer _wavePlayer;
@@ -21,6 +29,9 @@ namespace MP3Player.Sample
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private string _lastPlayed;
         private bool _isStreaming;
+
+        [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
+        private Speed SpeedState { get; set; } = Speed.Normal;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public double PositionPercent => (double)(_reader?.Position ?? 0) / (_reader?.Length ?? 1);
@@ -34,13 +45,16 @@ namespace MP3Player.Sample
         public bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
         public bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
         public bool IsMute { get; set; }
+        public bool SpeedNormal => SpeedState == Speed.Normal;
+        public bool SpeedFast => SpeedState == Speed.Fast;
+        public bool SpeedFastest => SpeedState == Speed.Fastest;
         public ImageSource TaskbarOverlay { get; set; }
         public ICommand OpenStreamingCommand { get; set; }
         public ICommand OpenFilesCommand { get; set; }
         public ICommand PlayPauseCommand { get; set; }
         public ICommand StopCommand { get; set; }
-        public ICommand NextCommand { get; set; }
-        public ICommand PreviousCommand { get; set; }
+        public ICommand TimerCommand { get; set; }
+        public ICommand SpeedCommand { get; set; }
         public ICommand MuteCommand { get; set; }
         public ICommand BackwardCommand { get; set; }
         public ICommand ForwardCommand { get; set; }
@@ -54,8 +68,25 @@ namespace MP3Player.Sample
             MuteCommand = new RelayCommand(OnMute);
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
+            SpeedCommand = new RelayCommand(OnChangedSpeed);
             _timer.Interval = TimeSpan.FromMilliseconds(500);
             _timer.Tick += Tick;
+        }
+
+        private void OnChangedSpeed()
+        {
+            switch (SpeedState)
+            {
+                case Speed.Normal:
+                    SpeedState = Speed.Fast;
+                    break;
+                case Speed.Fast:
+                    SpeedState = Speed.Fastest;
+                    break;
+                case Speed.Fastest:
+                    SpeedState = Speed.Normal;
+                    break;
+            }
         }
 
         private void OnBackward()

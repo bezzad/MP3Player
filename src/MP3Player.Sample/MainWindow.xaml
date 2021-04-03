@@ -44,13 +44,13 @@
                     Command="{Binding OpenStreamingCommand, Mode=OneWay}"
                     ToolTip="Streaming" Padding="0"
                     HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
-                <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
+                <materialDesign:PackIcon Kind="CloudDownloadOutline" Width="24" Height="24" />
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
                     Command="{Binding OpenFilesCommand, Mode=OneWay}"
                     ToolTip="Files List" Padding="0" Margin="14,0,0,0"
                     HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
-                <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" Foreground="{DynamicResource Brushes.Gray2}"/>
+                <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" />
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
                     Command="{Binding MuteCommand}"
@@ -85,12 +85,17 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" 
-                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Previous" Width="30" Height="30" Padding="0"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
-                            BorderBrush="Transparent" BorderThickness="0"
-                            Background="Transparent">
-                    <materialDesign:PackIcon Kind="SkipPrevious" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
+                        Command="{Binding SpeedCommand, Mode=OneWay}"
+                        Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                        Width="30" Height="30" Padding="0"
+                        materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                        BorderBrush="Transparent" BorderThickness="0"
+                        Background="Transparent">
+                    <Grid>
+                        <materialDesign:PackIcon Kind="SpeedometerSlow" sample:VisibilityHelper.IsVisible="{Binding SpeedNormal, Mode=OneWay}" ToolTip="Play Fast" Height="24" Width="24" />
+                        <materialDesign:PackIcon Kind="SpeedometerMedium" sample:VisibilityHelper.IsVisible="{Binding SpeedFast, Mode=OneWay}" ToolTip="Play Fastest" Height="24" Width="24" />
+                        <materialDesign:PackIcon Kind="Speedometer" sample:VisibilityHelper.IsVisible="{Binding SpeedFastest, Mode=OneWay}" ToolTip="Play Normal" Height="24" Width="24" />
+                    </Grid>
                 </Button>
                 <Button Grid.Column="1" 
                         Command="{Binding BackwardCommand, Mode=OneWay}"
@@ -123,12 +128,13 @@
                     <materialDesign:PackIcon Kind="FastForward10" Foreground="{DynamicResource Brushes.Gray3}" Height="24" Width="24" />
                 </Button>
                 <Button Grid.Column="4" 
-                            Style="{DynamicResource MaterialDesignFloatingActionButton}"
-                            ToolTip="Next track" Width="30" Height="30" Padding="0"
-                            materialDesign:ShadowAssist.ShadowDepth="Depth0"
-                            BorderBrush="Transparent" BorderThickness="0"
-                            Background="Transparent">
-                    <materialDesign:PackIcon Kind="SkipNext" Foreground="{DynamicResource Brushes.Gray2}" Height="24" Width="24" />
+                        Command="{Binding TimerCommand, Mode=OneWay}"
+                        Style="{DynamicResource MaterialDesignFloatingActionButton}"
+                        ToolTip="Timer" Width="30" Height="30" Padding="0"
+                        materialDesign:ShadowAssist.ShadowDepth="Depth0"
+                        BorderBrush="Transparent" BorderThickness="0"
+                        Background="Transparent">
+                    <materialDesign:PackIcon Kind="TimerOutline"  Height="24" Width="24" />
                 </Button>
             </Grid>
             <DockPanel Margin="10">
