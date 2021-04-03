@@ -6,7 +6,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:sample="clr-namespace:MP3Player.Sample"
         mc:Ignorable="d"
-        Title="MainWindow" Height="150" Width="900">
+        Title="{Binding AppTitle, Mode=OneWay}" Height="150" Width="900">
     <Window.TaskbarItemInfo>
         <TaskbarItemInfo Description="Sample MP3 Player" 
                          ThumbnailClipMargin="0"
@@ -48,7 +48,7 @@
             </Button>
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
                     Command="{Binding OpenFilesCommand, Mode=OneWay}"
-                    ToolTip="Files List" Padding="0" Margin="14,0,0,0"
+                    ToolTip="Open MP3 File" Padding="0" Margin="14,0,0,0"
                     HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                 <materialDesign:PackIcon Kind="PlaylistPlay" Width="24" Height="24" />
             </Button>

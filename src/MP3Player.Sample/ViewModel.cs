@@ -5,6 +5,7 @@ using MP3Player.Wave.WaveStreams;
 using MP3Player.Wave.WinMM;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -40,6 +41,7 @@ namespace MP3Player.Sample
         public float Volume { get; set; } = 100;
         public TimeSpan Duration { get; set; }
         public TimeSpan CurrentTime { get; set; }
+        public string AppTitle { get; set; }
         public string InputPath { get; set; }
         public string DefaultDecompressionFormat { get; set; }
         public bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
@@ -61,6 +63,7 @@ namespace MP3Player.Sample
 
         public ViewModel()
         {
+            AppTitle = "Simple MP3 Player  (File Not Loaded)";
             OpenStreamingCommand = new RelayCommand(OnStreaming);
             OpenFilesCommand = new RelayCommand(OnOpenFiles);
             PlayPauseCommand = new RelayCommand(OnPlayPause);
@@ -116,7 +119,7 @@ namespace MP3Player.Sample
         {
             try
             {
-                var ofd = new OpenFileDialog();
+                var ofd = new OpenFileDialog { Filter = "MP3 files (*.mp3)|*.mp3" };
                 if (ofd.ShowDialog() == true)
                 {
                     Stop();
@@ -124,6 +127,7 @@ namespace MP3Player.Sample
                     DefaultDecompressionFormat = tempReader.WaveFormat.ToString();
                     InputPath = ofd.FileName;
                     _isStreaming = false;
+                    AppTitle = $"Simple MP3 Player  ({Path.GetFileName(InputPath)})";
                 }
             }
             catch (Exception e)
@@ -139,10 +143,17 @@ namespace MP3Player.Sample
 
         private void OnPlayPause()
         {
-            if (IsPlaying)
-                Pause();
+            if (string.IsNullOrWhiteSpace(InputPath))
+            {
+                OnOpenFiles();
+            }
             else
-                Play();
+            {
+                if (IsPlaying)
+                    Pause();
+                else
+                    Play();
+            }
         }
 
         private void Pause()
@@ -151,6 +162,7 @@ namespace MP3Player.Sample
             UpdatePlayerState();
             _timer?.Stop();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
+            AppTitle = $"Simple MP3 Player  (Pause {Path.GetFileName(InputPath)})";
         }
 
         private void Play()
@@ -181,6 +193,7 @@ namespace MP3Player.Sample
             UpdatePlayerState();
             _timer.Start();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
+            AppTitle = $"Simple MP3 Player  (Playing {Path.GetFileName(InputPath)})";
         }
 
         private void Stop()
@@ -189,6 +202,7 @@ namespace MP3Player.Sample
             TaskbarOverlay = null;
             _timer?.Stop();
             Position = 0;
+            AppTitle = $"Simple MP3 Player  ({Path.GetFileName(InputPath)})";
         }
 
         private void Tick(object sender, EventArgs eventArgs)
