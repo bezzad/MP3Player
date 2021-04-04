@@ -15,13 +15,6 @@ using PropertyChanged;
 
 namespace MP3Player.Sample
 {
-    public enum Speed
-    {
-        Normal,
-        Fast,
-        Fastest
-    }
-
     public sealed class ViewModel : INotifyPropertyChanged, IDisposable
     {
         private IWavePlayer _wavePlayer;
