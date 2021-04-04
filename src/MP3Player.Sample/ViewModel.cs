@@ -23,7 +23,6 @@ namespace MP3Player.Sample
         private readonly DispatcherTimer _timer = new DispatcherTimer();
         private string _lastPlayed;
         public bool IsStreaming { get; set; }
-
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
 
@@ -139,6 +138,7 @@ namespace MP3Player.Sample
             if (string.IsNullOrWhiteSpace(InputPath))
             {
                 OnOpenFiles();
+                Play();
             }
             else
             {
@@ -250,8 +250,7 @@ namespace MP3Player.Sample
         {
             if (_reader != null)
             {
-                Position = 0;
-                _timer.Stop();
+                Stop();
             }
             if (stoppedEventArgs.Exception != null)
             {
