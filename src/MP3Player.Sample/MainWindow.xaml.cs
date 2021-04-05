@@ -10,7 +10,7 @@ namespace MP3Player.Sample
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new ViewModel();
+            DataContext = new SimpleMp3PlayerViewModel();
         }
     }
 }

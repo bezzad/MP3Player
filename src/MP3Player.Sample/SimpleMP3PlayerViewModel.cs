@@ -15,7 +15,7 @@ using PropertyChanged;
 
 namespace MP3Player.Sample
 {
-    public sealed class ViewModel : INotifyPropertyChanged, IDisposable
+    public sealed class SimpleMp3PlayerViewModel : INotifyPropertyChanged, IDisposable
     {
         private IWavePlayer _wavePlayer;
         private WaveStream _reader;
@@ -53,7 +53,7 @@ namespace MP3Player.Sample
         public ICommand BackwardCommand { get; set; }
         public ICommand ForwardCommand { get; set; }
 
-        public ViewModel()
+        public SimpleMp3PlayerViewModel()
         {
             AppTitle = "Simple MP3 Player  (File Not Loaded)";
             OpenStreamingCommand = new RelayCommand(OnStreaming);
