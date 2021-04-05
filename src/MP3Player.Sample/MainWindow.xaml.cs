@@ -12,5 +12,15 @@ namespace MP3Player.Sample
             InitializeComponent();
             DataContext = new SimpleMp3PlayerViewModel();
         }
+
+        private void OnSimple(object sender, RoutedEventArgs e)
+        {
+            DataContext = new SimpleMp3PlayerViewModel();
+        }
+
+        private void OnStreaming(object sender, RoutedEventArgs e)
+        {
+             DataContext= new StreamingViewModel();
+        }
     }
 }
