@@ -32,8 +32,4 @@
     <ProjectReference Include="..\MP3Player\MP3Player.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
-
 </Project>

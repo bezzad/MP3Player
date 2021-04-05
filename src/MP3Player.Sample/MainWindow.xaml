@@ -50,7 +50,7 @@
             </Border>
             <DockPanel Margin="10,20" VerticalAlignment="Center">
                 <Button DockPanel.Dock="Right" Background="Transparent" BorderThickness="0" Cursor="Hand"
-                        Command="{Binding OpenFilesCommand, Mode=OneWay}"
+                        Command="{Binding OpenFileCommand, Mode=OneWay}"
                         ToolTip="Open MP3 File" Padding="0" Margin="14,0,0,0"
                         HorizontalAlignment="Right" VerticalAlignment="Center" Width="30"  Height="30" >
                     <materialDesign:PackIcon Kind="MusicNotePlus" Width="24" Height="24" />

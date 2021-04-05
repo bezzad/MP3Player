@@ -3,69 +3,41 @@ using MP3Player.Wave.WaveOutputs;
 using MP3Player.Wave.WaveProviders;
 using MP3Player.Wave.WaveStreams;
 using MP3Player.Wave.WinMM;
+using PropertyChanged;
 using System;
-using System.ComponentModel;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
-using PropertyChanged;
 
 namespace MP3Player.Sample
 {
-    public sealed class SimpleMp3PlayerViewModel : INotifyPropertyChanged, IDisposable
+    public sealed class SimpleMp3PlayerViewModel : PlayerViewModel
     {
         private IWavePlayer _wavePlayer;
         private WaveStream _reader;
         private VolumeWaveProvider16 _volumeProvider;
-        private readonly DispatcherTimer _timer = new DispatcherTimer();
         private string _lastPlayed;
-        public bool IsStreaming { get; set; }
+
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        public double PositionPercent => (double)(_reader?.Position ?? 0) / (_reader?.Length ?? 1);
-        public double Position { get; set; }
-        public double MaxPosition { get; set; } = 1000;
-        public float Volume { get; set; } = 100;
-        public TimeSpan Duration { get; set; }
-        public TimeSpan CurrentTime { get; set; }
-        public string AppTitle { get; set; }
-        public string InputPath { get; set; }
         public string DefaultDecompressionFormat { get; set; }
-        public bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
-        public bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
-        public bool IsMute { get; set; }
+        public override bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
+        public override bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
         public bool SpeedNormal => SpeedState == Speed.Normal;
         public bool SpeedFast => SpeedState == Speed.Fast;
         public bool SpeedFastest => SpeedState == Speed.Fastest;
         public ImageSource TaskbarOverlay { get; set; }
-        public ICommand OpenStreamingCommand { get; set; }
-        public ICommand OpenFilesCommand { get; set; }
-        public ICommand PlayPauseCommand { get; set; }
-        public ICommand StopCommand { get; set; }
-        public ICommand TimerCommand { get; set; }
         public ICommand SpeedCommand { get; set; }
-        public ICommand MuteCommand { get; set; }
         public ICommand BackwardCommand { get; set; }
         public ICommand ForwardCommand { get; set; }
 
         public SimpleMp3PlayerViewModel()
         {
             AppTitle = "Simple MP3 Player  (File Not Loaded)";
-            OpenStreamingCommand = new RelayCommand(OnStreaming);
-            OpenFilesCommand = new RelayCommand(OnOpenFiles);
-            PlayPauseCommand = new RelayCommand(OnPlayPause);
-            StopCommand = new RelayCommand(Stop);
-            MuteCommand = new RelayCommand(OnMute);
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
             SpeedCommand = new RelayCommand(OnChangedSpeed);
-            _timer.Interval = TimeSpan.FromMilliseconds(500);
-            _timer.Tick += Tick;
         }
 
         private void OnChangedSpeed()
@@ -101,13 +73,17 @@ namespace MP3Player.Sample
                 OnPropertyChanged(nameof(Position));
             }
         }
-
-        private void OnStreaming()
+        
+        protected override void Pause()
         {
-            IsStreaming = true;
+            _wavePlayer?.Pause();
+            UpdatePlayerState();
+            PlayerTimer?.Stop();
+            TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
+            AppTitle = $"Simple MP3 Player  (Pause {Path.GetFileName(InputPath)})";
         }
 
-        private void OnOpenFiles()
+        protected override void OpenFile()
         {
             try
             {
@@ -128,37 +104,7 @@ namespace MP3Player.Sample
             }
         }
 
-        private void OnMute()
-        {
-            IsMute = !IsMute;
-        }
-
-        private void OnPlayPause()
-        {
-            if (string.IsNullOrWhiteSpace(InputPath))
-            {
-                OnOpenFiles();
-                Play();
-            }
-            else
-            {
-                if (IsPlaying)
-                    Pause();
-                else
-                    Play();
-            }
-        }
-
-        private void Pause()
-        {
-            _wavePlayer?.Pause();
-            UpdatePlayerState();
-            _timer?.Stop();
-            TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
-            AppTitle = $"Simple MP3 Player  (Pause {Path.GetFileName(InputPath)})";
-        }
-
-        private void Play()
+        protected override void Play()
         {
             if (string.IsNullOrEmpty(InputPath))
             {
@@ -184,21 +130,21 @@ namespace MP3Player.Sample
             }
             _wavePlayer.Play();
             UpdatePlayerState();
-            _timer.Start();
+            PlayerTimer.Start();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
             AppTitle = $"Simple MP3 Player  (Playing {Path.GetFileName(InputPath)})";
         }
 
-        private void Stop()
+        protected override void Stop()
         {
             _wavePlayer?.Stop();
             TaskbarOverlay = null;
-            _timer?.Stop();
+            PlayerTimer?.Stop();
             Position = 0;
             AppTitle = $"Simple MP3 Player  ({Path.GetFileName(InputPath)})";
         }
 
-        private void Tick(object sender, EventArgs eventArgs)
+        protected override void OnTick(object sender, EventArgs eventArgs)
         {
             if (_reader != null)
             {
@@ -213,7 +159,7 @@ namespace MP3Player.Sample
             OnPropertyChanged(nameof(IsStopped));
         }
 
-        private void OnPositionChanged()
+        protected override void OnPositionChanged()
         {
             if (_reader != null)
             {
@@ -223,7 +169,7 @@ namespace MP3Player.Sample
             }
         }
 
-        private void OnVolumeChanged()
+        protected override void OnVolumeChanged()
         {
             if (_volumeProvider != null)
             {
@@ -232,7 +178,7 @@ namespace MP3Player.Sample
             IsMute = Volume == 0;
         }
 
-        private void OnIsMuteChanged()
+        protected override void OnIsMuteChanged()
         {
             if (_volumeProvider != null)
             {
@@ -261,12 +207,7 @@ namespace MP3Player.Sample
             OnPropertyChanged(nameof(IsStopped));
         }
 
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public void Dispose()
+        public override void Dispose()
         {
             _wavePlayer?.Dispose();
             _reader?.Dispose();
