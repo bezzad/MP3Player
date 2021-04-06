@@ -1,8 +1,6 @@
 ﻿using Microsoft.Win32;
-using MP3Player.Wave.WaveOutputs;
 using MP3Player.Wave.WaveProviders;
 using MP3Player.Wave.WaveStreams;
-using MP3Player.Wave.WinMM;
 using System;
 using System.IO;
 using System.Windows;
@@ -14,7 +12,7 @@ namespace MP3Player.Sample
     {
         private WaveStream _reader;
         private string _lastPlayed;
-        
+
         public SimpleMp3PlayerViewModel()
         {
             AppBaseTitle = "Simple MP3 Player";
@@ -118,7 +116,7 @@ namespace MP3Player.Sample
                 OnPropertyChanged(nameof(PositionPercent));
             }
         }
-        
+
         protected override void OnPositionChanged()
         {
             if (_reader != null)

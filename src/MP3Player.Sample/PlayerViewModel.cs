@@ -93,7 +93,7 @@ namespace MP3Player.Sample
             UpdatePlayerState();
         }
 
-        protected void UpdatePlayerState()
+        protected virtual void UpdatePlayerState()
         {
             OnPropertyChanged(nameof(IsPlaying));
             OnPropertyChanged(nameof(IsStopped));

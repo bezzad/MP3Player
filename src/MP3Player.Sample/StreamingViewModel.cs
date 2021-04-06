@@ -31,6 +31,7 @@ namespace MP3Player.Sample
             _bufferedWaveProvider.BufferLength - _bufferedWaveProvider.BufferedBytes
             < _bufferedWaveProvider.WaveFormat.AverageBytesPerSecond / 4;
 
+        public bool IsBuffering => _playbackState == StreamingPlaybackState.Buffering;
         public int BufferProgress { get; set; }
         public int MaximumBufferProgress { get; set; }
         public string BufferProgressText { get; set; }
@@ -71,6 +72,12 @@ namespace MP3Player.Sample
         {
 
         }
+        protected override void UpdatePlayerState()
+        {
+            base.UpdatePlayerState();
+            OnPropertyChanged(nameof(IsBuffering));
+        }
+
         protected override void OpenFile()
         {
             try
@@ -176,6 +183,7 @@ namespace MP3Player.Sample
                         StopPlayback();
                     }
                 }
+                UpdatePlayerState();
             }
         }
 
