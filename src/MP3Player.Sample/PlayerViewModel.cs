@@ -72,9 +72,24 @@ namespace MP3Player.Sample
         protected abstract void OnBackward();
         protected abstract void OnForward();
         protected abstract void OnPositionChanged();
-        protected abstract void OnIsMuteChanged();
-        protected abstract void OnVolumeChanged();
         protected abstract void OnTick(object sender, EventArgs e);
+
+        protected void OnIsMuteChanged()
+        {
+            if (VolumeProvider != null)
+            {
+                VolumeProvider.Volume = IsMute ? 0 : Volume/100;
+            }
+        }
+
+        protected void OnVolumeChanged()
+        {
+            if (VolumeProvider != null)
+            {
+                VolumeProvider.Volume = Volume / 100;
+            }
+            IsMute = Volume == 0;
+        }
 
         protected void SetTitle(string info)
         {

@@ -23,8 +23,6 @@ namespace MP3Player.Sample
         {
             AppBaseTitle = "Simple MP3 Player";
             SetTitle("File Not Loaded");
-            ForwardCommand = new RelayCommand(OnForward);
-            BackwardCommand = new RelayCommand(OnBackward);
             IsStreaming = false;
         }
 
@@ -138,23 +136,6 @@ namespace MP3Player.Sample
                 _reader.Position = (long)(_reader.Length * Position / MaxPosition);
                 CurrentTime = _reader.CurrentTime;
                 OnPropertyChanged(nameof(PositionPercent));
-            }
-        }
-
-        protected override void OnVolumeChanged()
-        {
-            if (VolumeProvider != null)
-            {
-                VolumeProvider.Volume = Volume / 100;
-            }
-            IsMute = Volume == 0;
-        }
-
-        protected override void OnIsMuteChanged()
-        {
-            if (VolumeProvider != null)
-            {
-                VolumeProvider.Volume = IsMute ? 0 : Volume/100;
             }
         }
 
