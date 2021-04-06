@@ -3,11 +3,9 @@ using MP3Player.Wave.WaveOutputs;
 using MP3Player.Wave.WaveProviders;
 using MP3Player.Wave.WaveStreams;
 using MP3Player.Wave.WinMM;
-using PropertyChanged;
 using System;
 using System.IO;
 using System.Windows;
-using System.Windows.Input;
 using System.Windows.Media;
 
 namespace MP3Player.Sample
@@ -16,20 +14,11 @@ namespace MP3Player.Sample
     {
         private IWavePlayer _wavePlayer;
         private WaveStream _reader;
-        private VolumeWaveProvider16 _volumeProvider;
         private string _lastPlayed;
 
-        [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
-        private Speed SpeedState { get; set; } = Speed.Normal;
         public string DefaultDecompressionFormat { get; set; }
         public override bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
         public override bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
-        public bool SpeedNormal => SpeedState == Speed.Normal;
-        public bool SpeedFast => SpeedState == Speed.Fast;
-        public bool SpeedFastest => SpeedState == Speed.Fastest;
-        public ImageSource TaskbarOverlay { get; set; }
-        public ICommand BackwardCommand { get; set; }
-        public ICommand ForwardCommand { get; set; }
 
         public SimpleMp3PlayerViewModel()
         {
@@ -40,23 +29,7 @@ namespace MP3Player.Sample
             IsStreaming = false;
         }
 
-        private void OnChangedSpeed()
-        {
-            switch (SpeedState)
-            {
-                case Speed.Normal:
-                    SpeedState = Speed.Fast;
-                    break;
-                case Speed.Fast:
-                    SpeedState = Speed.Fastest;
-                    break;
-                case Speed.Fastest:
-                    SpeedState = Speed.Normal;
-                    break;
-            }
-        }
-
-        private void OnBackward()
+        protected override void OnBackward()
         {
             if (_reader != null)
             {
@@ -65,7 +38,7 @@ namespace MP3Player.Sample
             }
         }
 
-        private void OnForward()
+        protected override void OnForward()
         {
             if (_reader != null)
             {
@@ -73,7 +46,7 @@ namespace MP3Player.Sample
                 OnPropertyChanged(nameof(Position));
             }
         }
-        
+
         protected override void Pause()
         {
             _wavePlayer?.Pause();
@@ -123,9 +96,9 @@ namespace MP3Player.Sample
             if (_reader == null)
             {
                 _reader = new Mp3FileReader(InputPath);
-                _volumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
+                VolumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
                 _lastPlayed = InputPath;
-                _wavePlayer.Init(_volumeProvider);
+                _wavePlayer.Init(VolumeProvider);
                 Duration = _reader.TotalTime;
             }
             _wavePlayer.Play();
@@ -171,18 +144,18 @@ namespace MP3Player.Sample
 
         protected override void OnVolumeChanged()
         {
-            if (_volumeProvider != null)
+            if (VolumeProvider != null)
             {
-                _volumeProvider.Volume = Volume / 100;
+                VolumeProvider.Volume = Volume / 100;
             }
             IsMute = Volume == 0;
         }
 
         protected override void OnIsMuteChanged()
         {
-            if (_volumeProvider != null)
+            if (VolumeProvider != null)
             {
-                _volumeProvider.Volume = IsMute ? 0 : Volume/100;
+                VolumeProvider.Volume = IsMute ? 0 : Volume/100;
             }
         }
 
@@ -206,7 +179,7 @@ namespace MP3Player.Sample
             OnPropertyChanged(nameof(IsPlaying));
             OnPropertyChanged(nameof(IsStopped));
         }
-        
+
         public override void Dispose()
         {
             _wavePlayer?.Dispose();

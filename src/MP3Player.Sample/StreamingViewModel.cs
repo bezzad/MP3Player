@@ -24,7 +24,6 @@ namespace MP3Player.Sample
         private IWavePlayer _wavePlayer;
         private WaveStream _reader;
         private BufferedWaveProvider _bufferedWaveProvider;
-        private VolumeWaveProvider16 _volumeProvider;
         private volatile StreamingPlaybackState _playbackState;
         private volatile bool _fullyDownloaded;
         private string _lastPlayed;
@@ -41,10 +40,7 @@ namespace MP3Player.Sample
         public bool SpeedNormal => SpeedState == Speed.Normal;
         public bool SpeedFast => SpeedState == Speed.Fast;
         public bool SpeedFastest => SpeedState == Speed.Fastest;
-        public ImageSource TaskbarOverlay { get; set; }
         public ICommand SpeedCommand { get; set; }
-        public ICommand BackwardCommand { get; set; }
-        public ICommand ForwardCommand { get; set; }
 
         public StreamingViewModel()
         {
@@ -72,7 +68,7 @@ namespace MP3Player.Sample
             }
         }
 
-        private void OnBackward()
+        protected override void OnBackward()
         {
             if (_reader != null)
             {
@@ -81,7 +77,7 @@ namespace MP3Player.Sample
             }
         }
 
-        private void OnForward()
+        protected override void OnForward()
         {
             if (_reader != null)
             {
@@ -246,9 +242,9 @@ namespace MP3Player.Sample
                 if (_reader == null)
                 {
                     _reader = new Mp3FileReader(InputPath);
-                    _volumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
+                    VolumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
                     _lastPlayed = InputPath;
-                    _wavePlayer.Init(_volumeProvider);
+                    _wavePlayer.Init(VolumeProvider);
                     Duration = _reader.TotalTime;
                 }
                 _wavePlayer.Play();
@@ -296,18 +292,18 @@ namespace MP3Player.Sample
 
         protected override void OnVolumeChanged()
         {
-            if (_volumeProvider != null)
+            if (VolumeProvider != null)
             {
-                _volumeProvider.Volume = Volume / 100;
+                VolumeProvider.Volume = Volume / 100;
             }
             IsMute = Volume == 0;
         }
 
         protected override void OnIsMuteChanged()
         {
-            if (_volumeProvider != null)
+            if (VolumeProvider != null)
             {
-                _volumeProvider.Volume = IsMute ? 0 : Volume/100;
+                VolumeProvider.Volume = IsMute ? 0 : Volume/100;
             }
         }
 

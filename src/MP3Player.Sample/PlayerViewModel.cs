@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
+using MP3Player.Wave.WaveProviders;
 
 namespace MP3Player.Sample
 {
     public abstract class PlayerViewModel : ViewModel
     {
         protected DispatcherTimer PlayerTimer { get; } = new DispatcherTimer();
+        protected VolumeWaveProvider16 VolumeProvider { get; set; }
         protected string AppBaseTitle { get; set; } = "MP3 Player";
         public string AppTitle { get; private set; }
         public string InputPath { get; set; }
@@ -20,10 +23,13 @@ namespace MP3Player.Sample
         public bool IsStreaming { get; set; }
         public abstract bool IsPlaying { get; }
         public abstract bool IsStopped { get; }
+        public ImageSource TaskbarOverlay { get; set; }
         public ICommand PlayPauseCommand { get; }
         public ICommand StopCommand { get; }
         public ICommand MuteCommand { get; }
         public ICommand OpenFileCommand { get; }
+        public ICommand BackwardCommand { get; set; }
+        public ICommand ForwardCommand { get; set; }
 
         protected PlayerViewModel()
         {
@@ -31,6 +37,8 @@ namespace MP3Player.Sample
             StopCommand = new RelayCommand(Stop);
             MuteCommand = new RelayCommand(OnMute);
             OpenFileCommand = new RelayCommand(OpenFile);
+            ForwardCommand = new RelayCommand(OnForward);
+            BackwardCommand = new RelayCommand(OnBackward);
             PlayerTimer.Interval = TimeSpan.FromMilliseconds(500);
             PlayerTimer.Tick += OnTick;
         }
@@ -59,6 +67,8 @@ namespace MP3Player.Sample
         protected abstract void Play();
         protected abstract void Pause();
         protected abstract void OpenFile();
+        protected abstract void OnBackward();
+        protected abstract void OnForward();
         protected abstract void OnPositionChanged();
         protected abstract void OnIsMuteChanged();
         protected abstract void OnVolumeChanged();
