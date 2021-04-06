@@ -96,6 +96,7 @@
                     <ColumnDefinition />
                 </Grid.ColumnDefinitions>
                 <Button Grid.Column="0" 
+                        sample:VisibilityHelper.IsVisible="{Binding IsStreaming, Mode=OneWay}"
                         Command="{Binding SpeedCommand, Mode=OneWay}"
                         Style="{DynamicResource MaterialDesignFloatingActionButton}"
                         Width="30" Height="30" Padding="0"

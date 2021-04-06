@@ -48,10 +48,11 @@ namespace MP3Player.Sample
 
         public StreamingViewModel()
         {
-            AppTitle = "Streaming MP3 Player  (File Not Loaded)";
+            SetTitle("File Not Loaded");
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
             SpeedCommand = new RelayCommand(OnChangedSpeed);
+            IsStreaming = true;
         }
 
         private void OnChangedSpeed()
@@ -87,7 +88,7 @@ namespace MP3Player.Sample
                 OnPropertyChanged(nameof(Position));
             }
         }
-        
+
         private void StreamMp3(string url)
         {
             _fullyDownloaded = false;
@@ -190,7 +191,7 @@ namespace MP3Player.Sample
                     DefaultDecompressionFormat = tempReader.WaveFormat.ToString();
                     InputPath = ofd.FileName;
                     IsStreaming = false;
-                    AppTitle = $"Simple MP3 Player  ({Path.GetFileName(InputPath)})";
+                    SetTitle(Path.GetFileName(InputPath));
                 }
             }
             catch (Exception e)
@@ -198,7 +199,7 @@ namespace MP3Player.Sample
                 MessageBox.Show($"Not a supported input file ({e.Message})");
             }
         }
-        
+
         protected override void Pause()
         {
             if (InputPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
@@ -213,7 +214,7 @@ namespace MP3Player.Sample
             UpdatePlayerState();
             PlayerTimer?.Stop();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
-            AppTitle = $"Simple MP3 Player  (Pause {Path.GetFileName(InputPath)})";
+            SetTitle("Pause " + Path.GetFileName(InputPath));
         }
 
         protected override void Play()
@@ -255,7 +256,7 @@ namespace MP3Player.Sample
             UpdatePlayerState();
             PlayerTimer.Start();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
-            AppTitle = $"Simple MP3 Player  (Playing {Path.GetFileName(InputPath)})";
+            SetTitle("Playing " + Path.GetFileName(InputPath));
         }
 
         protected override void Stop()
@@ -264,7 +265,7 @@ namespace MP3Player.Sample
             TaskbarOverlay = null;
             PlayerTimer?.Stop();
             Position = 0;
-            AppTitle = $"Simple MP3 Player  ({Path.GetFileName(InputPath)})";
+            SetTitle(Path.GetFileName(InputPath));
         }
 
         protected override void OnTick(object sender, EventArgs eventArgs)
@@ -328,6 +329,15 @@ namespace MP3Player.Sample
 
             OnPropertyChanged(nameof(IsPlaying));
             OnPropertyChanged(nameof(IsStopped));
+        }
+
+        protected override void SetTitle(string info)
+        {
+            AppTitle = "Streaming MP3 Player";
+            if (string.IsNullOrWhiteSpace(info) == false)
+            {
+                AppTitle += $" ({info})";
+            }
         }
 
         public override void Dispose()

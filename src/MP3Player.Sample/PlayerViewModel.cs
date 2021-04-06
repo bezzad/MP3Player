@@ -63,5 +63,14 @@ namespace MP3Player.Sample
         protected abstract void OnIsMuteChanged();
         protected abstract void OnVolumeChanged();
         protected abstract void OnTick(object sender, EventArgs e);
+
+        protected virtual void SetTitle(string info)
+        {
+            AppTitle = "MP3 Player";
+            if (string.IsNullOrWhiteSpace(info) == false)
+            {
+                AppTitle += $" ({info})";
+            }
+        }
     }
 }
