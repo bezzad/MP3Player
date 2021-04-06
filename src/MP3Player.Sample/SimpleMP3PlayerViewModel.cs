@@ -14,11 +14,7 @@ namespace MP3Player.Sample
     {
         private WaveStream _reader;
         private string _lastPlayed;
-
-        public string DefaultDecompressionFormat { get; set; }
-        public override bool IsPlaying => WavePlayer != null && WavePlayer.PlaybackState == PlaybackState.Playing;
-        public override bool IsStopped => WavePlayer == null || WavePlayer.PlaybackState == PlaybackState.Stopped;
-
+        
         public SimpleMp3PlayerViewModel()
         {
             AppBaseTitle = "Simple MP3 Player";
@@ -156,8 +152,7 @@ namespace MP3Player.Sample
                 MessageBox.Show(stoppedEventArgs.Exception.Message, "Error Playing File");
             }
 
-            OnPropertyChanged(nameof(IsPlaying));
-            OnPropertyChanged(nameof(IsStopped));
+            UpdatePlayerState();
         }
 
         public override void Dispose()

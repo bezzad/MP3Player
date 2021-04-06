@@ -12,6 +12,7 @@ namespace MP3Player.Sample
         protected DispatcherTimer PlayerTimer { get; } = new DispatcherTimer();
         protected IWavePlayer WavePlayer { get; set; }
         protected VolumeWaveProvider16 VolumeProvider { get; set; }
+        protected string DefaultDecompressionFormat { get; set; }
         protected string AppBaseTitle { get; set; } = "MP3 Player";
         public string AppTitle { get; private set; }
         public string InputPath { get; set; }
@@ -23,15 +24,15 @@ namespace MP3Player.Sample
         public double PositionPercent => Position / MaxPosition;
         public bool IsMute { get; set; }
         public bool IsStreaming { get; set; }
-        public abstract bool IsPlaying { get; }
-        public abstract bool IsStopped { get; }
+        public bool IsPlaying => WavePlayer != null && WavePlayer.PlaybackState == PlaybackState.Playing;
+        public bool IsStopped => WavePlayer == null || WavePlayer.PlaybackState == PlaybackState.Stopped;
         public ImageSource TaskbarOverlay { get; set; }
         public ICommand PlayPauseCommand { get; }
         public ICommand StopCommand { get; }
         public ICommand MuteCommand { get; }
         public ICommand OpenFileCommand { get; }
-        public ICommand BackwardCommand { get; set; }
-        public ICommand ForwardCommand { get; set; }
+        public ICommand BackwardCommand { get; }
+        public ICommand ForwardCommand { get; }
 
         protected PlayerViewModel()
         {
