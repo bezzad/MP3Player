@@ -7,20 +7,25 @@ namespace MP3Player.Sample
     /// </summary>
     public partial class MainWindow : Window
     {
+        private readonly SimpleMp3PlayerViewModel _simpleViewModel;
+        private readonly StreamingViewModel _streamingViewModel;
+
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new SimpleMp3PlayerViewModel();
+            _simpleViewModel = new SimpleMp3PlayerViewModel();
+            _streamingViewModel = new StreamingViewModel();
+            DataContext = _simpleViewModel;
         }
 
         private void OnSimple(object sender, RoutedEventArgs e)
         {
-            DataContext = new SimpleMp3PlayerViewModel();
+            DataContext = _simpleViewModel;
         }
 
         private void OnStreaming(object sender, RoutedEventArgs e)
         {
-             DataContext= new StreamingViewModel();
+            DataContext = _streamingViewModel;
         }
     }
 }

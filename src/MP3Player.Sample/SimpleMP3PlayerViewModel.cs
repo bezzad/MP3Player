@@ -106,7 +106,7 @@ namespace MP3Player.Sample
 
         protected override void Play()
         {
-            if (string.IsNullOrEmpty(InputPath))
+            if (string.IsNullOrEmpty(InputPath) || File.Exists(InputPath) == false)
             {
                 MessageBox.Show("Select a valid input file or URL first");
                 return;

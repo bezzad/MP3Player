@@ -58,7 +58,7 @@
                 <TextBox Height="50"
                          Style="{StaticResource MaterialDesignOutlinedTextBox}"
                          Text="{Binding InputPath, Mode=TwoWay}"
-                         materialDesign:HintAssist.Hint="Streaming URL"
+                         materialDesign:HintAssist.Hint="Path / URL"
                          materialDesign:HintAssist.HelperTextFontSize="16" />
             </DockPanel>
         </DockPanel>
