@@ -47,6 +47,7 @@ namespace MP3Player.Sample
             SetTitle("File Not Loaded");
             SpeedCommand = new RelayCommand(OnChangedSpeed);
             IsStreaming = true;
+            InputPath = "http://stream.radiojavan.com/";
         }
 
         private void OnChangedSpeed()
