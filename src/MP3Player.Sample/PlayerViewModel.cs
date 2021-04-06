@@ -7,8 +7,8 @@ namespace MP3Player.Sample
     public abstract class PlayerViewModel : ViewModel
     {
         protected DispatcherTimer PlayerTimer { get; } = new DispatcherTimer();
-
-        public string AppTitle { get; set; }
+        protected string AppBaseTitle { get; set; } = "MP3 Player";
+        public string AppTitle { get; private set; }
         public string InputPath { get; set; }
         public float Volume { get; set; } = 100;
         public TimeSpan Duration { get; set; }
@@ -66,7 +66,7 @@ namespace MP3Player.Sample
 
         protected virtual void SetTitle(string info)
         {
-            AppTitle = "MP3 Player";
+            AppTitle = AppBaseTitle;
             if (string.IsNullOrWhiteSpace(info) == false)
             {
                 AppTitle += $" ({info})";

@@ -48,6 +48,7 @@ namespace MP3Player.Sample
 
         public StreamingViewModel()
         {
+            AppBaseTitle = "Streaming MP3 Player";
             SetTitle("File Not Loaded");
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
@@ -329,15 +330,6 @@ namespace MP3Player.Sample
 
             OnPropertyChanged(nameof(IsPlaying));
             OnPropertyChanged(nameof(IsStopped));
-        }
-
-        protected override void SetTitle(string info)
-        {
-            AppTitle = "Streaming MP3 Player";
-            if (string.IsNullOrWhiteSpace(info) == false)
-            {
-                AppTitle += $" ({info})";
-            }
         }
 
         public override void Dispose()
