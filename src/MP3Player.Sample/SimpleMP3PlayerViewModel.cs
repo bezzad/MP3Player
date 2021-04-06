@@ -12,13 +12,12 @@ namespace MP3Player.Sample
 {
     public sealed class SimpleMp3PlayerViewModel : PlayerViewModel
     {
-        private IWavePlayer _wavePlayer;
         private WaveStream _reader;
         private string _lastPlayed;
 
         public string DefaultDecompressionFormat { get; set; }
-        public override bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
-        public override bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
+        public override bool IsPlaying => WavePlayer != null && WavePlayer.PlaybackState == PlaybackState.Playing;
+        public override bool IsStopped => WavePlayer == null || WavePlayer.PlaybackState == PlaybackState.Stopped;
 
         public SimpleMp3PlayerViewModel()
         {
@@ -49,7 +48,7 @@ namespace MP3Player.Sample
 
         protected override void Pause()
         {
-            _wavePlayer?.Pause();
+            WavePlayer?.Pause();
             UpdatePlayerState();
             PlayerTimer?.Stop();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
@@ -84,7 +83,7 @@ namespace MP3Player.Sample
                 MessageBox.Show("Select a valid input file or URL first");
                 return;
             }
-            if (_wavePlayer == null)
+            if (WavePlayer == null)
             {
                 CreatePlayer();
             }
@@ -98,10 +97,10 @@ namespace MP3Player.Sample
                 _reader = new Mp3FileReader(InputPath);
                 VolumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
                 _lastPlayed = InputPath;
-                _wavePlayer.Init(VolumeProvider);
+                WavePlayer.Init(VolumeProvider);
                 Duration = _reader.TotalTime;
             }
-            _wavePlayer.Play();
+            WavePlayer.Play();
             UpdatePlayerState();
             PlayerTimer.Start();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
@@ -110,7 +109,7 @@ namespace MP3Player.Sample
 
         protected override void Stop()
         {
-            _wavePlayer?.Stop();
+            WavePlayer?.Stop();
             TaskbarOverlay = null;
             PlayerTimer?.Stop();
             Position = 0;
@@ -161,8 +160,8 @@ namespace MP3Player.Sample
 
         private void CreatePlayer()
         {
-            _wavePlayer = new WaveOutEvent();
-            _wavePlayer.PlaybackStopped += OnPlaybackStopped;
+            WavePlayer = new WaveOutEvent();
+            WavePlayer.PlaybackStopped += OnPlaybackStopped;
         }
 
         private void OnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
@@ -182,7 +181,7 @@ namespace MP3Player.Sample
 
         public override void Dispose()
         {
-            _wavePlayer?.Dispose();
+            base.Dispose();
             _reader?.Dispose();
         }
     }

@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 
 namespace MP3Player.Sample
 {
@@ -16,6 +17,7 @@ namespace MP3Player.Sample
             _simpleViewModel = new SimpleMp3PlayerViewModel();
             _streamingViewModel = new StreamingViewModel();
             DataContext = _simpleViewModel;
+            Closing += OnClosing;
         }
 
         private void OnSimple(object sender, RoutedEventArgs e)
@@ -26,6 +28,12 @@ namespace MP3Player.Sample
         private void OnStreaming(object sender, RoutedEventArgs e)
         {
             DataContext = _streamingViewModel;
+        }
+
+        private void OnClosing(object sender, CancelEventArgs e)
+        {
+            _simpleViewModel?.Dispose();
+            _streamingViewModel?.Dispose();
         }
     }
 }

@@ -21,7 +21,6 @@ namespace MP3Player.Sample
 {
     public sealed class StreamingViewModel : PlayerViewModel
     {
-        private IWavePlayer _wavePlayer;
         private WaveStream _reader;
         private BufferedWaveProvider _bufferedWaveProvider;
         private volatile StreamingPlaybackState _playbackState;
@@ -35,8 +34,8 @@ namespace MP3Player.Sample
             < _bufferedWaveProvider.WaveFormat.AverageBytesPerSecond / 4;
 
         public string DefaultDecompressionFormat { get; set; }
-        public override bool IsPlaying => _wavePlayer != null && _wavePlayer.PlaybackState == PlaybackState.Playing;
-        public override bool IsStopped => _wavePlayer == null || _wavePlayer.PlaybackState == PlaybackState.Stopped;
+        public override bool IsPlaying => WavePlayer != null && WavePlayer.PlaybackState == PlaybackState.Playing;
+        public override bool IsStopped => WavePlayer == null || WavePlayer.PlaybackState == PlaybackState.Stopped;
         public bool SpeedNormal => SpeedState == Speed.Normal;
         public bool SpeedFast => SpeedState == Speed.Fast;
         public bool SpeedFastest => SpeedState == Speed.Fastest;
@@ -205,7 +204,7 @@ namespace MP3Player.Sample
             }
             else
             {
-                _wavePlayer?.Pause();
+                WavePlayer?.Pause();
             }
 
             UpdatePlayerState();
@@ -230,7 +229,7 @@ namespace MP3Player.Sample
             }
             else // play from file
             {
-                if (_wavePlayer == null)
+                if (WavePlayer == null)
                 {
                     CreatePlayer();
                 }
@@ -244,10 +243,10 @@ namespace MP3Player.Sample
                     _reader = new Mp3FileReader(InputPath);
                     VolumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
                     _lastPlayed = InputPath;
-                    _wavePlayer.Init(VolumeProvider);
+                    WavePlayer.Init(VolumeProvider);
                     Duration = _reader.TotalTime;
                 }
-                _wavePlayer.Play();
+                WavePlayer.Play();
             }
 
             UpdatePlayerState();
@@ -258,7 +257,7 @@ namespace MP3Player.Sample
 
         protected override void Stop()
         {
-            _wavePlayer?.Stop();
+            WavePlayer?.Stop();
             TaskbarOverlay = null;
             PlayerTimer?.Stop();
             Position = 0;
@@ -309,8 +308,8 @@ namespace MP3Player.Sample
 
         private void CreatePlayer()
         {
-            _wavePlayer = new WaveOutEvent();
-            _wavePlayer.PlaybackStopped += OnPlaybackStopped;
+            WavePlayer = new WaveOutEvent();
+            WavePlayer.PlaybackStopped += OnPlaybackStopped;
         }
 
         private void OnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
@@ -330,7 +329,7 @@ namespace MP3Player.Sample
 
         public override void Dispose()
         {
-            _wavePlayer?.Dispose();
+            base.Dispose();
             _reader?.Dispose();
         }
     }

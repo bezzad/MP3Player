@@ -2,6 +2,7 @@
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using MP3Player.Wave.WaveOutputs;
 using MP3Player.Wave.WaveProviders;
 
 namespace MP3Player.Sample
@@ -9,6 +10,7 @@ namespace MP3Player.Sample
     public abstract class PlayerViewModel : ViewModel
     {
         protected DispatcherTimer PlayerTimer { get; } = new DispatcherTimer();
+        protected IWavePlayer WavePlayer { get; set; }
         protected VolumeWaveProvider16 VolumeProvider { get; set; }
         protected string AppBaseTitle { get; set; } = "MP3 Player";
         public string AppTitle { get; private set; }
@@ -74,13 +76,19 @@ namespace MP3Player.Sample
         protected abstract void OnVolumeChanged();
         protected abstract void OnTick(object sender, EventArgs e);
 
-        protected virtual void SetTitle(string info)
+        protected void SetTitle(string info)
         {
             AppTitle = AppBaseTitle;
             if (string.IsNullOrWhiteSpace(info) == false)
             {
                 AppTitle += $" ({info})";
             }
+        }
+
+        public override void Dispose()
+        {
+            Stop();
+            WavePlayer?.Dispose();
         }
     }
 }
