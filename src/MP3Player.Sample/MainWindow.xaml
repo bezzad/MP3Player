@@ -65,13 +65,13 @@
         <Grid DockPanel.Dock="Bottom" Margin="0, 0, 0, -10" Height="20"
                    sample:VisibilityHelper.IsVisible="{Binding IsStreaming, Mode=OneWay}">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="60" />
                 <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="60" />
             </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Bufferd:  " VerticalAlignment="Bottom"/>
+            <TextBlock Grid.Column="0" Text="Bufferd:" FontSize="10" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
             <ProgressBar Grid.Column="1" Value="{Binding BufferProgress, Mode=OneWay}" Maximum="{Binding MaximumBufferProgress, Mode=OneWay}" Height="10" VerticalAlignment="Bottom" />
-            <TextBlock Grid.Column="2" Text="{Binding BufferProgressText, Mode=OneWay}" VerticalAlignment="Bottom"/>
+            <TextBlock Grid.Column="2" Text="{Binding BufferProgressText, Mode=OneWay}" FontSize="10" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
         </Grid>
         <DockPanel Dock="Right" VerticalAlignment="Top" Margin="10" Height="50">
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"

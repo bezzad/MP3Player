@@ -3,7 +3,6 @@ using MP3Player.Wave.FileFormats.MP3;
 using MP3Player.Wave.WaveFormats;
 using MP3Player.Wave.WaveOutputs;
 using MP3Player.Wave.WaveProviders;
-using MP3Player.Wave.WaveStreams;
 using MP3Player.Wave.WinMM;
 using PropertyChanged;
 using System;
@@ -21,11 +20,10 @@ namespace MP3Player.Sample
 {
     public sealed class StreamingViewModel : PlayerViewModel
     {
-        private WaveStream _reader;
         private BufferedWaveProvider _bufferedWaveProvider;
+        private HttpWebRequest _webRequest;
         private volatile StreamingPlaybackState _playbackState;
         private volatile bool _fullyDownloaded;
-        private string _lastPlayed;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
@@ -33,13 +31,13 @@ namespace MP3Player.Sample
             _bufferedWaveProvider.BufferLength - _bufferedWaveProvider.BufferedBytes
             < _bufferedWaveProvider.WaveFormat.AverageBytesPerSecond / 4;
 
-        public string DefaultDecompressionFormat { get; set; }
-        public override bool IsPlaying => WavePlayer != null && WavePlayer.PlaybackState == PlaybackState.Playing;
-        public override bool IsStopped => WavePlayer == null || WavePlayer.PlaybackState == PlaybackState.Stopped;
+        public int BufferProgress { get; set; }
+        public int MaximumBufferProgress { get; set; }
+        public string BufferProgressText { get; set; }
         public bool SpeedNormal => SpeedState == Speed.Normal;
         public bool SpeedFast => SpeedState == Speed.Fast;
         public bool SpeedFastest => SpeedState == Speed.Fastest;
-        public ICommand SpeedCommand { get; set; }
+        public ICommand SpeedCommand { get; }
 
         public StreamingViewModel()
         {
@@ -67,19 +65,11 @@ namespace MP3Player.Sample
         }
         protected override void OnBackward()
         {
-            if (_reader != null)
-            {
-                _reader.Position = Math.Max(_reader.Position - (long)_reader.WaveFormat.AverageBytesPerSecond * 10, 0);
-                OnPropertyChanged(nameof(Position));
-            }
+
         }
         protected override void OnForward()
         {
-            if (_reader != null)
-            {
-                _reader.Position = Math.Min(_reader.Position + (long)_reader.WaveFormat.AverageBytesPerSecond * 10, _reader.Length-1);
-                OnPropertyChanged(nameof(Position));
-            }
+
         }
         protected override void OpenFile()
         {
@@ -127,34 +117,20 @@ namespace MP3Player.Sample
 
             if (InputPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) // streaming play
             {
-                _playbackState = StreamingPlaybackState.Buffering;
-                _bufferedWaveProvider = null;
-                Task.Run(() => StreamMp3(InputPath));
-            }
-            else // play from file
-            {
-                if (WavePlayer == null)
+                if (_playbackState == StreamingPlaybackState.Stopped)
                 {
-                    CreatePlayer();
+                    _playbackState = StreamingPlaybackState.Buffering;
+                    _bufferedWaveProvider = null;
+                    Task.Run(() => StreamMp3(InputPath));
                 }
-                if (_lastPlayed != InputPath && _reader != null)
+                else if (_playbackState == StreamingPlaybackState.Paused)
                 {
-                    _reader.Dispose();
-                    _reader = null;
+                    _playbackState = StreamingPlaybackState.Buffering;
                 }
-                if (_reader == null)
-                {
-                    _reader = new Mp3FileReader(InputPath);
-                    VolumeProvider = new VolumeWaveProvider16(_reader) { Volume = Volume / 100 };
-                    _lastPlayed = InputPath;
-                    WavePlayer.Init(VolumeProvider);
-                    Duration = _reader.TotalTime;
-                }
-                WavePlayer.Play();
             }
 
-            UpdatePlayerState();
             PlayerTimer.Start();
+            UpdatePlayerState();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
             SetTitle("Playing " + Path.GetFileName(InputPath));
         }
@@ -166,29 +142,76 @@ namespace MP3Player.Sample
             Position = 0;
             SetTitle(Path.GetFileName(InputPath));
         }
+
         protected override void OnTick(object sender, EventArgs eventArgs)
         {
-            if (_reader != null)
+            if (_playbackState != StreamingPlaybackState.Stopped)
             {
-                Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
-                OnPropertyChanged(nameof(PositionPercent));
+                if (WavePlayer == null && _bufferedWaveProvider != null)
+                {
+                    Debug.WriteLine("Creating WaveOut Device");
+                    CreatePlayer();
+                    VolumeProvider = new VolumeWaveProvider16(_bufferedWaveProvider) {Volume = Volume / 100};
+                    WavePlayer.Init(VolumeProvider);
+                    MaximumBufferProgress = (int) _bufferedWaveProvider.BufferDuration.TotalMilliseconds;
+                }
+                else if (_bufferedWaveProvider != null)
+                {
+                    var bufferedSeconds = _bufferedWaveProvider.BufferedDuration.TotalSeconds;
+                    ShowBufferState(bufferedSeconds);
+                    // make it stutter less if we buffer up a decent amount before playing
+                    if (bufferedSeconds < 0.5 && _playbackState == StreamingPlaybackState.Playing && !_fullyDownloaded)
+                    {
+                        _playbackState = StreamingPlaybackState.Buffering;
+                        WavePlayer.Pause();
+                    }
+                    else if (bufferedSeconds > 4 && _playbackState == StreamingPlaybackState.Buffering)
+                    {
+                        WavePlayer.Play();
+                        _playbackState = StreamingPlaybackState.Playing;
+                    }
+                    else if (_fullyDownloaded && bufferedSeconds == 0)
+                    {
+                        Debug.WriteLine("Reached end of stream");
+                        StopPlayback();
+                    }
+                }
             }
         }
-        private void UpdatePlayerState()
+
+        private void StopPlayback()
         {
-            OnPropertyChanged(nameof(IsPlaying));
-            OnPropertyChanged(nameof(IsStopped));
+            if (_playbackState != StreamingPlaybackState.Stopped)
+            {
+                if (!_fullyDownloaded)
+                {
+                    _webRequest.Abort();
+                }
+
+                _playbackState = StreamingPlaybackState.Stopped;
+                if (WavePlayer != null)
+                {
+                    WavePlayer.Stop();
+                    WavePlayer.Dispose();
+                    WavePlayer = null;
+                }
+                PlayerTimer.Stop();
+                // n.b. streaming thread may not yet have exited
+                Thread.Sleep(500);
+                ShowBufferState(0);
+            }
         }
+
         protected override void OnPositionChanged()
         {
-            if (_reader != null)
-            {
-                _reader.Position = (long)(_reader.Length * Position / MaxPosition);
-                CurrentTime = _reader.CurrentTime;
-                OnPropertyChanged(nameof(PositionPercent));
-            }
+            // if (_reader != null)
+            // {
+            //     _reader.Position = (long)(_reader.Length * Position / MaxPosition);
+            //     CurrentTime = _reader.CurrentTime;
+            //     OnPropertyChanged(nameof(PositionPercent));
+            // }
         }
-        
+
         private void StreamMp3(string url)
         {
             _fullyDownloaded = false;
@@ -197,8 +220,8 @@ namespace MP3Player.Sample
 
             try
             {
-                var webRequest = (HttpWebRequest)WebRequest.Create(url);
-                var resp = (HttpWebResponse)webRequest.GetResponse();
+                _webRequest = (HttpWebRequest)WebRequest.Create(url);
+                var resp = (HttpWebResponse)_webRequest.GetResponse();
                 using var responseStream = resp.GetResponseStream();
                 var readFullyStream = new ReadFullyStream(responseStream);
 
@@ -278,30 +301,16 @@ namespace MP3Player.Sample
                 new Mp3WaveFormat(frame.SampleRate, frame.ChannelMode == ChannelMode.Mono ? 1 : 2, frame.FrameLength, frame.BitRate);
             return new AcmMp3FrameDecompressor(waveFormat);
         }
-        private void CreatePlayer()
+        private void ShowBufferState(double totalSeconds)
         {
-            WavePlayer = new WaveOutEvent();
-            WavePlayer.PlaybackStopped += OnPlaybackStopped;
+            BufferProgressText = $"{totalSeconds:0.0}s";
+            BufferProgress = (int)(totalSeconds * 1000);
         }
-        private void OnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
-        {
-            if (_reader != null)
-            {
-                Stop();
-            }
-            if (stoppedEventArgs.Exception != null)
-            {
-                MessageBox.Show(stoppedEventArgs.Exception.Message, "Error Playing File");
-            }
 
-            OnPropertyChanged(nameof(IsPlaying));
-            OnPropertyChanged(nameof(IsStopped));
-        }
-        
         public override void Dispose()
         {
+            StopPlayback();
             base.Dispose();
-            _reader?.Dispose();
         }
     }
 }

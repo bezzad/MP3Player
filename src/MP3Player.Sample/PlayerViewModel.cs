@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using MP3Player.Wave.WaveOutputs;
 using MP3Player.Wave.WaveProviders;
+using MP3Player.Wave.WinMM;
 
 namespace MP3Player.Sample
 {
@@ -74,6 +76,28 @@ namespace MP3Player.Sample
         protected abstract void OnForward();
         protected abstract void OnPositionChanged();
         protected abstract void OnTick(object sender, EventArgs e);
+
+        protected void CreatePlayer()
+        {
+            WavePlayer = new WaveOutEvent();
+            WavePlayer.PlaybackStopped += OnPlaybackStopped;
+        }
+
+        private void OnPlaybackStopped(object sender, StoppedEventArgs e)
+        {
+            Stop();
+            if (e.Exception != null)
+            {
+                MessageBox.Show(e.Exception.Message, "Error Playing File");
+            }
+            UpdatePlayerState();
+        }
+
+        protected void UpdatePlayerState()
+        {
+            OnPropertyChanged(nameof(IsPlaying));
+            OnPropertyChanged(nameof(IsStopped));
+        }
 
         protected void OnIsMuteChanged()
         {

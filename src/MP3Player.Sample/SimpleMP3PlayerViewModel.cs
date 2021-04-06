@@ -118,13 +118,7 @@ namespace MP3Player.Sample
                 OnPropertyChanged(nameof(PositionPercent));
             }
         }
-
-        private void UpdatePlayerState()
-        {
-            OnPropertyChanged(nameof(IsPlaying));
-            OnPropertyChanged(nameof(IsStopped));
-        }
-
+        
         protected override void OnPositionChanged()
         {
             if (_reader != null)
@@ -133,26 +127,6 @@ namespace MP3Player.Sample
                 CurrentTime = _reader.CurrentTime;
                 OnPropertyChanged(nameof(PositionPercent));
             }
-        }
-
-        private void CreatePlayer()
-        {
-            WavePlayer = new WaveOutEvent();
-            WavePlayer.PlaybackStopped += OnPlaybackStopped;
-        }
-
-        private void OnPlaybackStopped(object sender, StoppedEventArgs stoppedEventArgs)
-        {
-            if (_reader != null)
-            {
-                Stop();
-            }
-            if (stoppedEventArgs.Exception != null)
-            {
-                MessageBox.Show(stoppedEventArgs.Exception.Message, "Error Playing File");
-            }
-
-            UpdatePlayerState();
         }
 
         public override void Dispose()
