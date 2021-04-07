@@ -12,8 +12,7 @@ namespace MP3Player.Wave.WaveProviders
     /// </summary>
     public class BufferedWaveProvider : IWaveProvider
     {
-        private CircularBuffer circularBuffer;
-        private readonly WaveFormat waveFormat;
+        private CircularBuffer _circularBuffer;
 
         /// <summary>
         /// Creates a new buffered WaveProvider
@@ -21,7 +20,7 @@ namespace MP3Player.Wave.WaveProviders
         /// <param name="waveFormat">WaveFormat</param>
         public BufferedWaveProvider(WaveFormat waveFormat)
         {
-            this.waveFormat = waveFormat;
+            WaveFormat = waveFormat;
             BufferLength = waveFormat.AverageBytesPerSecond * 5;
             ReadFully = true;
         }
@@ -35,21 +34,15 @@ namespace MP3Player.Wave.WaveProviders
         /// <summary>
         /// Buffer length in bytes
         /// </summary>
-        public int BufferLength { get; set; }
+        public int BufferLength { get; private set; }
 
         /// <summary>
         /// Buffer duration
         /// </summary>
         public TimeSpan BufferDuration
         {
-            get
-            {
-                return TimeSpan.FromSeconds((double)BufferLength / WaveFormat.AverageBytesPerSecond);
-            }
-            set
-            {
-                BufferLength = (int)(value.TotalSeconds * WaveFormat.AverageBytesPerSecond);
-            }
+            get => TimeSpan.FromSeconds((double)BufferLength / WaveFormat.AverageBytesPerSecond);
+            set => BufferLength = (int)(value.TotalSeconds * WaveFormat.AverageBytesPerSecond);
         }
 
         /// <summary>
@@ -61,29 +54,17 @@ namespace MP3Player.Wave.WaveProviders
         /// <summary>
         /// The number of buffered bytes
         /// </summary>
-        public int BufferedBytes
-        {
-            get
-            {
-                return circularBuffer == null ? 0 : circularBuffer.Count;
-            }
-        }
+        public int BufferedBytes => _circularBuffer?.Count ?? 0;
 
         /// <summary>
         /// Buffered Duration
         /// </summary>
-        public TimeSpan BufferedDuration
-        {
-            get { return TimeSpan.FromSeconds((double)BufferedBytes / WaveFormat.AverageBytesPerSecond); }
-        }
+        public TimeSpan BufferedDuration => TimeSpan.FromSeconds((double)BufferedBytes / WaveFormat.AverageBytesPerSecond);
 
         /// <summary>
         /// Gets the WaveFormat
         /// </summary>
-        public WaveFormat WaveFormat
-        {
-            get { return waveFormat; }
-        }
+        public WaveFormat WaveFormat { get; }
 
         /// <summary>
         /// Adds samples. Takes a copy of buffer, so that buffer can be reused if necessary
@@ -91,12 +72,12 @@ namespace MP3Player.Wave.WaveProviders
         public void AddSamples(byte[] buffer, int offset, int count)
         {
             // create buffer here to allow user to customise buffer length
-            if (circularBuffer == null)
+            if (_circularBuffer == null)
             {
-                circularBuffer = new CircularBuffer(BufferLength);
+                _circularBuffer = new CircularBuffer(BufferLength);
             }
 
-            var written = circularBuffer.Write(buffer, offset, count);
+            var written = _circularBuffer.Write(buffer, offset, count);
             if (written < count && !DiscardOnBufferOverflow)
             {
                 throw new InvalidOperationException("Buffer full");
@@ -110,9 +91,9 @@ namespace MP3Player.Wave.WaveProviders
         public int Read(byte[] buffer, int offset, int count)
         {
             int read = 0;
-            if (circularBuffer != null) // not yet created
+            if (_circularBuffer != null) // not yet created
             {
-                read = circularBuffer.Read(buffer, offset, count);
+                read = _circularBuffer.Read(buffer, offset, count);
             }
             if (ReadFully && read < count)
             {
@@ -128,10 +109,7 @@ namespace MP3Player.Wave.WaveProviders
         /// </summary>
         public void ClearBuffer()
         {
-            if (circularBuffer != null)
-            {
-                circularBuffer.Reset();
-            }
+            _circularBuffer?.Reset();
         }
     }
 }

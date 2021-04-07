@@ -8,11 +8,11 @@ namespace MP3Player.Utils
     /// </summary>
     public class CircularBuffer
     {
-        private readonly byte[] buffer;
-        private readonly object lockObject;
-        private int writePosition;
-        private int readPosition;
-        private int byteCount;
+        private readonly byte[] _buffer;
+        private readonly object _lockObject;
+        private int _writePosition;
+        private int _readPosition;
+        private int _byteCount;
 
         /// <summary>
         /// Create a new circular buffer
@@ -20,8 +20,8 @@ namespace MP3Player.Utils
         /// <param name="size">Max buffer size in bytes</param>
         public CircularBuffer(int size)
         {
-            buffer = new byte[size];
-            lockObject = new object();
+            _buffer = new byte[size];
+            _lockObject = new object();
         }
 
         /// <summary>
@@ -33,28 +33,28 @@ namespace MP3Player.Utils
         /// <returns>number of bytes written</returns>
         public int Write(byte[] data, int offset, int count)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
                 var bytesWritten = 0;
-                if (count > buffer.Length - byteCount)
+                if (count > _buffer.Length - _byteCount)
                 {
-                    count = buffer.Length - byteCount;
+                    count = _buffer.Length - _byteCount;
                 }
                 // write to end
-                int writeToEnd = Math.Min(buffer.Length - writePosition, count);
-                Array.Copy(data, offset, buffer, writePosition, writeToEnd);
-                writePosition += writeToEnd;
-                writePosition %= buffer.Length;
+                int writeToEnd = Math.Min(_buffer.Length - _writePosition, count);
+                Array.Copy(data, offset, _buffer, _writePosition, writeToEnd);
+                _writePosition += writeToEnd;
+                _writePosition %= _buffer.Length;
                 bytesWritten += writeToEnd;
                 if (bytesWritten < count)
                 {
-                    Debug.Assert(writePosition == 0);
+                    Debug.Assert(_writePosition == 0);
                     // must have wrapped round. Write to start
-                    Array.Copy(data, offset + bytesWritten, buffer, writePosition, count - bytesWritten);
-                    writePosition += (count - bytesWritten);
+                    Array.Copy(data, offset + bytesWritten, _buffer, _writePosition, count - bytesWritten);
+                    _writePosition += (count - bytesWritten);
                     bytesWritten = count;
                 }
-                byteCount += bytesWritten;
+                _byteCount += bytesWritten;
                 return bytesWritten;
             }
         }
@@ -68,30 +68,30 @@ namespace MP3Player.Utils
         /// <returns>Number of bytes actually read</returns>
         public int Read(byte[] data, int offset, int count)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                if (count > byteCount)
+                if (count > _byteCount)
                 {
-                    count = byteCount;
+                    count = _byteCount;
                 }
                 int bytesRead = 0;
-                int readToEnd = Math.Min(buffer.Length - readPosition, count);
-                Array.Copy(buffer, readPosition, data, offset, readToEnd);
+                int readToEnd = Math.Min(_buffer.Length - _readPosition, count);
+                Array.Copy(_buffer, _readPosition, data, offset, readToEnd);
                 bytesRead += readToEnd;
-                readPosition += readToEnd;
-                readPosition %= buffer.Length;
+                _readPosition += readToEnd;
+                _readPosition %= _buffer.Length;
 
                 if (bytesRead < count)
                 {
                     // must have wrapped round. Read from start
-                    Debug.Assert(readPosition == 0);
-                    Array.Copy(buffer, readPosition, data, offset + bytesRead, count - bytesRead);
-                    readPosition += (count - bytesRead);
+                    Debug.Assert(_readPosition == 0);
+                    Array.Copy(_buffer, _readPosition, data, offset + bytesRead, count - bytesRead);
+                    _readPosition += (count - bytesRead);
                     bytesRead = count;
                 }
 
-                byteCount -= bytesRead;
-                Debug.Assert(byteCount >= 0);
+                _byteCount -= bytesRead;
+                Debug.Assert(_byteCount >= 0);
                 return bytesRead;
             }
         }
@@ -99,7 +99,7 @@ namespace MP3Player.Utils
         /// <summary>
         /// Maximum length of this circular buffer
         /// </summary>
-        public int MaxLength => buffer.Length;
+        public int MaxLength => _buffer.Length;
 
         /// <summary>
         /// Number of bytes currently stored in the circular buffer
@@ -108,9 +108,9 @@ namespace MP3Player.Utils
         {
             get
             {
-                lock (lockObject)
+                lock (_lockObject)
                 {
-                    return byteCount;
+                    return _byteCount;
                 }
             }
         }
@@ -120,7 +120,7 @@ namespace MP3Player.Utils
         /// </summary>
         public void Reset()
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
                 ResetInner();
             }
@@ -128,9 +128,9 @@ namespace MP3Player.Utils
 
         private void ResetInner()
         {
-            byteCount = 0;
-            readPosition = 0;
-            writePosition = 0;
+            _byteCount = 0;
+            _readPosition = 0;
+            _writePosition = 0;
         }
 
         /// <summary>
@@ -139,17 +139,17 @@ namespace MP3Player.Utils
         /// <param name="count">Bytes to advance</param>
         public void Advance(int count)
         {
-            lock (lockObject)
+            lock (_lockObject)
             {
-                if (count >= byteCount)
+                if (count >= _byteCount)
                 {
                     ResetInner();
                 }
                 else
                 {
-                    byteCount -= count;
-                    readPosition += count;
-                    readPosition %= MaxLength;
+                    _byteCount -= count;
+                    _readPosition += count;
+                    _readPosition %= MaxLength;
                 }
             }
         }

@@ -269,10 +269,9 @@ namespace MP3Player.Sample
                             deCompressor = CreateFrameDeCompressor(frame);
                             _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
                                 // allow us to get well ahead of ourselves
-                                BufferDuration = TimeSpan.FromSeconds(20)
+                                BufferDuration = TimeSpan.FromSeconds(90),
+                                DiscardOnBufferOverflow = true
                             };
-
-                            //this.bufferedWaveProvider.BufferedDuration = 250;
                         }
 
                         int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
