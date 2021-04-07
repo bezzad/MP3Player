@@ -11,9 +11,10 @@ namespace MP3Player
         private int _readAheadLength;
         private int _readAheadOffset;
 
-        public ReadFullyStream(Stream sourceStream)
+        public ReadFullyStream(Stream sourceStream, long contentLength)
         {
-            this._sourceStream = sourceStream;
+            _sourceStream = sourceStream;
+            Length = contentLength;
             _readAheadBuffer = new byte[4096];
         }
         public override bool CanRead => true;
@@ -27,12 +28,20 @@ namespace MP3Player
             throw new InvalidOperationException();
         }
 
-        public override long Length => _pos;
+        public override long Length { get; }
 
         public override long Position
         {
             get => _pos;
-            set => throw new InvalidOperationException();
+            set
+            {
+                if (_sourceStream.CanSeek)
+                {
+                    _pos = value;
+                    // _sourceStream.Position = value;
+                    _sourceStream.Seek(value, SeekOrigin.Current);
+                }
+            }
         }
 
 

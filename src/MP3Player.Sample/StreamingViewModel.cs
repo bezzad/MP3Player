@@ -22,6 +22,7 @@ namespace MP3Player.Sample
     {
         private BufferedWaveProvider _bufferedWaveProvider;
         private HttpWebRequest _webRequest;
+        private Stream _reader;
         private volatile StreamingPlaybackState _playbackState;
         private volatile bool _fullyDownloaded;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
@@ -86,8 +87,6 @@ namespace MP3Player.Sample
                 if (ofd.ShowDialog() == true)
                 {
                     Stop();
-                    using var tempReader = new Mp3FileReader(ofd.FileName);
-                    DefaultDecompressionFormat = tempReader.WaveFormat.ToString();
                     InputPath = ofd.FileName;
                     SetTitle(Path.GetFileName(InputPath));
                 }
@@ -213,27 +212,28 @@ namespace MP3Player.Sample
 
         protected override void OnPositionChanged()
         {
-            // if (_reader != null)
-            // {
-            //     _reader.Position = (long)(_reader.Length * Position / MaxPosition);
-            //     CurrentTime = _reader.CurrentTime;
-            //     OnPropertyChanged(nameof(PositionPercent));
-            // }
+            if (_reader != null)
+            {
+                _reader.Position = (long)(_reader.Length * Position / MaxPosition);
+                // CurrentTime = _reader.CurrentTime;
+                _bufferedWaveProvider.ClearBuffer();
+                OnPropertyChanged(nameof(PositionPercent));
+            }
         }
 
         private void OpenMp3File(string path)
         {
             var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            var readFullyStream = new ReadFullyStream(fileStream);
-            StreamMp3(readFullyStream);
+            _reader = new ReadFullyStream(fileStream, fileStream.Length);
+            StreamMp3(_reader);
         }
         private void DownloadMp3(string url)
         {
             _webRequest = (HttpWebRequest)WebRequest.Create(url);
             var resp = (HttpWebResponse)_webRequest.GetResponse();
             var responseStream = resp.GetResponseStream();
-            var readFullyStream = new ReadFullyStream(responseStream);
-            StreamMp3(readFullyStream);
+            _reader = new ReadFullyStream(responseStream, resp.ContentLength);
+            StreamMp3(_reader);
         }
         private void StreamMp3(Stream mp3Stream)
         {
@@ -265,8 +265,9 @@ namespace MP3Player.Sample
                                     deCompressor = CreateFrameDeCompressor(frame);
                                     _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
                                         // allow us to get well ahead of ourselves
-                                        BufferDuration = TimeSpan.FromSeconds(30),
-                                        DiscardOnBufferOverflow = true
+                                        BufferDuration = TimeSpan.FromSeconds(5),
+                                        DiscardOnBufferOverflow = false,
+                                        ReadFully = false
                                     };
                                 }
 
