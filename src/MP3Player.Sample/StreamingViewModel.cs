@@ -99,19 +99,15 @@ namespace MP3Player.Sample
         }
         protected override void Pause()
         {
-            if (InputPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
-            {
-                _playbackState = StreamingPlaybackState.Buffering;
-            }
-            else
+            if (_playbackState == StreamingPlaybackState.Playing || _playbackState == StreamingPlaybackState.Buffering)
             {
                 WavePlayer?.Pause();
-            }
+                _playbackState = StreamingPlaybackState.Paused;
 
-            UpdatePlayerState();
-            PlayerTimer?.Stop();
-            TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
-            SetTitle("Pause " + Path.GetFileName(InputPath));
+                UpdatePlayerState();
+                TaskbarOverlay = (ImageSource) Application.Current.FindResource("PauseImage");
+                SetTitle("Pause " + Path.GetFileName(InputPath));
+            }
         }
         protected override void Play()
         {
@@ -135,22 +131,22 @@ namespace MP3Player.Sample
                 {
                     Task.Run(() => OpenMp3File(InputPath));
                 }
-            }
+
+                PlayerTimer.Start();
+}
             else if (_playbackState == StreamingPlaybackState.Paused)
             {
                 _playbackState = StreamingPlaybackState.Buffering;
             }
 
-            PlayerTimer.Start();
             UpdatePlayerState();
             TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
             SetTitle("Playing " + Path.GetFileName(InputPath));
         }
         protected override void Stop()
         {
-            WavePlayer?.Stop();
+            StopPlayback();
             TaskbarOverlay = null;
-            PlayerTimer?.Stop();
             Position = 0;
             SetTitle(Path.GetFileName(InputPath));
         }
@@ -198,7 +194,7 @@ namespace MP3Player.Sample
             {
                 if (!_fullyDownloaded)
                 {
-                    _webRequest.Abort();
+                    _webRequest?.Abort();
                 }
 
                 _playbackState = StreamingPlaybackState.Stopped;
