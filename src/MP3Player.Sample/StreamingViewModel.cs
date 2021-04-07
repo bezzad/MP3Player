@@ -46,7 +46,7 @@ namespace MP3Player.Sample
             SetTitle("File Not Loaded");
             SpeedCommand = new RelayCommand(OnChangedSpeed);
             IsStreaming = true;
-            InputPath = "http://stream.radiojavan.com/";
+            InputPath = "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3";
         }
 
         private void OnChangedSpeed()
@@ -265,7 +265,7 @@ namespace MP3Player.Sample
                                     deCompressor = CreateFrameDeCompressor(frame);
                                     _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
                                         // allow us to get well ahead of ourselves
-                                        BufferDuration = TimeSpan.FromSeconds(90),
+                                        BufferDuration = TimeSpan.FromSeconds(30),
                                         DiscardOnBufferOverflow = true
                                     };
                                 }
