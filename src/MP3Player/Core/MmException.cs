@@ -25,7 +25,7 @@ namespace MP3Player.Core
 
         private static string ErrorMessage(MmResult result, string function)
         {
-            return String.Format("{0} calling {1}", result, function);
+            return $"{result} calling {function}";
         }
 
         /// <summary>

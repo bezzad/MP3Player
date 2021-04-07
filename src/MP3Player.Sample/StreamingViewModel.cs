@@ -89,7 +89,6 @@ namespace MP3Player.Sample
                     using var tempReader = new Mp3FileReader(ofd.FileName);
                     DefaultDecompressionFormat = tempReader.WaveFormat.ToString();
                     InputPath = ofd.FileName;
-                    IsStreaming = false;
                     SetTitle(Path.GetFileName(InputPath));
                 }
             }

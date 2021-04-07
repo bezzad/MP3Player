@@ -86,12 +86,8 @@ namespace MP3Player.Wave.WaveFormats
         /// </summary>
         public override string ToString()
         {
-            return String.Format("{0} wBitsPerSample:{1} dwChannelMask:{2} subFormat:{3} extraSize:{4}",
-                base.ToString(),
-                wValidBitsPerSample,
-                dwChannelMask,
-                subFormat,
-                extraSize);
+            return
+                $"{base.ToString()} wBitsPerSample:{wValidBitsPerSample} dwChannelMask:{dwChannelMask} subFormat:{subFormat} extraSize:{extraSize}";
         }
     }
 }

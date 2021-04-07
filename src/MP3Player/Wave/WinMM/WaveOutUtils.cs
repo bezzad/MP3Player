@@ -45,7 +45,8 @@ namespace MP3Player.Wave.WinMM
                 MmException.Try(WaveInterop.waveOutGetPosition(hWaveOut, ref mmTime, Marshal.SizeOf(mmTime)), "waveOutGetPosition");
 
                 if (mmTime.wType != MmTime.TIME_BYTES)
-                    throw new Exception(string.Format("waveOutGetPosition: wType -> Expected {0}, Received {1}", MmTime.TIME_BYTES, mmTime.wType));
+                    throw new Exception(
+                        $"waveOutGetPosition: wType -> Expected {MmTime.TIME_BYTES}, Received {mmTime.wType}");
 
                 return mmTime.cb;
             }

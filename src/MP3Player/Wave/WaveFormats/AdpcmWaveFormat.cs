@@ -99,8 +99,8 @@ namespace MP3Player.Wave.WaveFormats
         /// </summary>
         public override string ToString()
         {
-            return String.Format("Microsoft ADPCM {0} Hz {1} channels {2} bits per sample {3} samples per block",
-                this.SampleRate, this.channels, this.bitsPerSample, this.samplesPerBlock);
+            return
+                $"Microsoft ADPCM {this.SampleRate} Hz {this.channels} channels {this.bitsPerSample} bits per sample {this.samplesPerBlock} samples per block";
         }
     }
 }

@@ -55,8 +55,8 @@ namespace MP3Player.Wave.WinMM
             int converted = conversionStream.Convert(frame.FrameLength, out int sourceBytesConverted);
             if (sourceBytesConverted != frame.FrameLength)
             {
-                throw new InvalidOperationException(String.Format("Couldn't convert the whole MP3 frame (converted {0}/{1})",
-                    sourceBytesConverted, frame.FrameLength));
+                throw new InvalidOperationException(
+                    $"Couldn't convert the whole MP3 frame (converted {sourceBytesConverted}/{frame.FrameLength})");
             }
             Array.Copy(conversionStream.DestBuffer, 0, dest, destOffset, converted);
             return converted;
