@@ -122,18 +122,24 @@ namespace MP3Player.Sample
                 return;
             }
 
-            if (InputPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) // streaming play
+            if (_playbackState == StreamingPlaybackState.Stopped)
             {
-                if (_playbackState == StreamingPlaybackState.Stopped)
+                _playbackState = StreamingPlaybackState.Buffering;
+                _bufferedWaveProvider = null;
+
+                // streaming play from HTTP protocol
+                if (InputPath.StartsWith("http", StringComparison.OrdinalIgnoreCase)) 
                 {
-                    _playbackState = StreamingPlaybackState.Buffering;
-                    _bufferedWaveProvider = null;
-                    Task.Run(() => StreamMp3(InputPath));
+                    Task.Run(() => DownloadMp3(InputPath));
                 }
-                else if (_playbackState == StreamingPlaybackState.Paused)
+                else // streaming play from File protocol
                 {
-                    _playbackState = StreamingPlaybackState.Buffering;
+                    Task.Run(() => OpenMp3File(InputPath));
                 }
+            }
+            else if (_playbackState == StreamingPlaybackState.Paused)
+            {
+                _playbackState = StreamingPlaybackState.Buffering;
             }
 
             PlayerTimer.Start();
@@ -158,9 +164,9 @@ namespace MP3Player.Sample
                 {
                     Debug.WriteLine("Creating WaveOut Device");
                     CreatePlayer();
-                    VolumeProvider = new VolumeWaveProvider16(_bufferedWaveProvider) {Volume = Volume / 100};
+                    VolumeProvider = new VolumeWaveProvider16(_bufferedWaveProvider) { Volume = Volume / 100 };
                     WavePlayer.Init(VolumeProvider);
-                    MaximumBufferProgress = (int) _bufferedWaveProvider.BufferDuration.TotalMilliseconds;
+                    MaximumBufferProgress = (int)_bufferedWaveProvider.BufferDuration.TotalMilliseconds;
                 }
                 else if (_bufferedWaveProvider != null)
                 {
@@ -220,7 +226,21 @@ namespace MP3Player.Sample
             // }
         }
 
-        private void StreamMp3(string url)
+        private void OpenMp3File(string path)
+        {
+            var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            var readFullyStream = new ReadFullyStream(fileStream);
+            StreamMp3(readFullyStream);
+        }
+        private void DownloadMp3(string url)
+        {
+            _webRequest = (HttpWebRequest)WebRequest.Create(url);
+            var resp = (HttpWebResponse)_webRequest.GetResponse();
+            var responseStream = resp.GetResponseStream();
+            var readFullyStream = new ReadFullyStream(responseStream);
+            StreamMp3(readFullyStream);
+        }
+        private void StreamMp3(Stream mp3Stream)
         {
             _fullyDownloaded = false;
             var buffer = new byte[16384 * 4]; // needs to be big enough to hold a decompressed frame
@@ -228,11 +248,6 @@ namespace MP3Player.Sample
 
             try
             {
-                _webRequest = (HttpWebRequest)WebRequest.Create(url);
-                var resp = (HttpWebResponse)_webRequest.GetResponse();
-                using var responseStream = resp.GetResponseStream();
-                var readFullyStream = new ReadFullyStream(responseStream);
-
                 do
                 {
                     if (IsBufferNearlyFull)
@@ -242,10 +257,28 @@ namespace MP3Player.Sample
                     }
                     else
                     {
-                        Mp3Frame frame;
                         try
                         {
-                            frame = Mp3Frame.LoadFromStream(readFullyStream);
+                            var frame = Mp3Frame.LoadFromStream(mp3Stream);
+                            if (frame != null)
+                            {
+                                if (deCompressor == null)
+                                {
+                                    // don't think these details matter too much - just help ACM select the right codec
+                                    // however, the buffered provider doesn't know what sample rate it is working at
+                                    // until we have a frame
+                                    deCompressor = CreateFrameDeCompressor(frame);
+                                    _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
+                                        // allow us to get well ahead of ourselves
+                                        BufferDuration = TimeSpan.FromSeconds(90),
+                                        DiscardOnBufferOverflow = true
+                                    };
+                                }
+
+                                int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
+                                //Debug.WriteLine(String.Format("Decompressed a frame {0}", decompressed));
+                                _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
+                            }
                         }
                         catch (EndOfStreamException)
                         {
@@ -258,25 +291,6 @@ namespace MP3Player.Sample
                             // probably we have aborted download from the GUI thread
                             break;
                         }
-
-                        if (frame == null)
-                            break;
-                        if (deCompressor == null)
-                        {
-                            // don't think these details matter too much - just help ACM select the right codec
-                            // however, the buffered provider doesn't know what sample rate it is working at
-                            // until we have a frame
-                            deCompressor = CreateFrameDeCompressor(frame);
-                            _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
-                                // allow us to get well ahead of ourselves
-                                BufferDuration = TimeSpan.FromSeconds(90),
-                                DiscardOnBufferOverflow = true
-                            };
-                        }
-
-                        int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
-                        //Debug.WriteLine(String.Format("Decompressed a frame {0}", decompressed));
-                        _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
                     }
 
                 } while (_playbackState != StreamingPlaybackState.Stopped);
@@ -299,6 +313,7 @@ namespace MP3Player.Sample
             }
             finally
             {
+                mp3Stream?.Dispose();
                 deCompressor?.Dispose();
             }
         }

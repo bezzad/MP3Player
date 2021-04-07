@@ -5,52 +5,34 @@ namespace MP3Player
 {
     public class ReadFullyStream : Stream
     {
-        private readonly Stream sourceStream;
-        private long pos; // psuedo-position
-        private readonly byte[] readAheadBuffer;
-        private int readAheadLength;
-        private int readAheadOffset;
+        private readonly Stream _sourceStream;
+        private long _pos; // psuedo-position
+        private readonly byte[] _readAheadBuffer;
+        private int _readAheadLength;
+        private int _readAheadOffset;
 
         public ReadFullyStream(Stream sourceStream)
         {
-            this.sourceStream = sourceStream;
-            readAheadBuffer = new byte[4096];
+            this._sourceStream = sourceStream;
+            _readAheadBuffer = new byte[4096];
         }
-        public override bool CanRead
-        {
-            get { return true; }
-        }
+        public override bool CanRead => true;
 
-        public override bool CanSeek
-        {
-            get { return false; }
-        }
+        public override bool CanSeek => false;
 
-        public override bool CanWrite
-        {
-            get { return false; }
-        }
+        public override bool CanWrite => false;
 
         public override void Flush()
         {
             throw new InvalidOperationException();
         }
 
-        public override long Length
-        {
-            get { return pos; }
-        }
+        public override long Length => _pos;
 
         public override long Position
         {
-            get
-            {
-                return pos;
-            }
-            set
-            {
-                throw new InvalidOperationException();
-            }
+            get => _pos;
+            set => throw new InvalidOperationException();
         }
 
 
@@ -59,27 +41,27 @@ namespace MP3Player
             int bytesRead = 0;
             while (bytesRead < count)
             {
-                int readAheadAvailableBytes = readAheadLength - readAheadOffset;
+                int readAheadAvailableBytes = _readAheadLength - _readAheadOffset;
                 int bytesRequired = count - bytesRead;
                 if (readAheadAvailableBytes > 0)
                 {
                     int toCopy = Math.Min(readAheadAvailableBytes, bytesRequired);
-                    Array.Copy(readAheadBuffer, readAheadOffset, buffer, offset + bytesRead, toCopy);
+                    Array.Copy(_readAheadBuffer, _readAheadOffset, buffer, offset + bytesRead, toCopy);
                     bytesRead += toCopy;
-                    readAheadOffset += toCopy;
+                    _readAheadOffset += toCopy;
                 }
                 else
                 {
-                    readAheadOffset = 0;
-                    readAheadLength = sourceStream.Read(readAheadBuffer, 0, readAheadBuffer.Length);
+                    _readAheadOffset = 0;
+                    _readAheadLength = _sourceStream.Read(_readAheadBuffer, 0, _readAheadBuffer.Length);
                     //Debug.WriteLine(String.Format("Read {0} bytes (requested {1})", readAheadLength, readAheadBuffer.Length));
-                    if (readAheadLength == 0)
+                    if (_readAheadLength == 0)
                     {
                         break;
                     }
                 }
             }
-            pos += bytesRead;
+            _pos += bytesRead;
             return bytesRead;
         }
 
@@ -96,6 +78,12 @@ namespace MP3Player
         public override void Write(byte[] buffer, int offset, int count)
         {
             throw new InvalidOperationException();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _sourceStream?.Dispose();
+            base.Dispose(disposing);
         }
     }
 }
