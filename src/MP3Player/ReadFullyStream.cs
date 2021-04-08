@@ -38,7 +38,6 @@ namespace MP3Player
                 if (_sourceStream.CanSeek)
                 {
                     _pos = value;
-                    // _sourceStream.Position = value;
                     _sourceStream.Seek(value, SeekOrigin.Current);
                 }
             }

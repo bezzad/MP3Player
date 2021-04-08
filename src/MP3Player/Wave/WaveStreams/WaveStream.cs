@@ -99,26 +99,14 @@ namespace MP3Player.Wave.WaveStreams
         /// </summary>
         public virtual TimeSpan CurrentTime
         {
-            get
-            {
-                return TimeSpan.FromSeconds((double)Position / WaveFormat.AverageBytesPerSecond);
-            }
-            set
-            {
-                Position = (long)(value.TotalSeconds * WaveFormat.AverageBytesPerSecond);
-            }
+            get => TimeSpan.FromSeconds((double)Position / WaveFormat.AverageBytesPerSecond);
+            set => Position = (long)(value.TotalSeconds * WaveFormat.AverageBytesPerSecond);
         }
 
         /// <summary>
         /// Total length in real-time of the stream (may be an estimate for compressed files)
         /// </summary>
-        public virtual TimeSpan TotalTime
-        {
-            get
-            {
-                return TimeSpan.FromSeconds((double)Length / WaveFormat.AverageBytesPerSecond);
-            }
-        }
+        public virtual TimeSpan TotalTime => TimeSpan.FromSeconds((double)Length / WaveFormat.AverageBytesPerSecond);
 
         /// <summary>
         /// Whether the WaveStream has non-zero sample data at the current position for the 
