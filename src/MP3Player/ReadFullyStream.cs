@@ -55,7 +55,6 @@ namespace MP3Player
                 {
                     _readAheadOffset = 0;
                     _readAheadLength = _sourceStream.Read(_readAheadBuffer, 0, _readAheadBuffer.Length);
-                    //Debug.WriteLine(String.Format("Read {0} bytes (requested {1})", readAheadLength, readAheadBuffer.Length));
                     if (_readAheadLength == 0)
                     {
                         break;

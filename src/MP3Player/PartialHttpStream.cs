@@ -13,9 +13,12 @@ namespace MP3Player
         private long _position;
         private bool _positionChanged = false;
 
+        private readonly byte[] _readAheadBuffer;
+        private int _readAheadLength;
+        private int _readAheadOffset;
+
         protected readonly HttpClient HttpClient;
         protected Stream SourceStream;
-        protected HttpRequestMessage Request;
 
         public string Url { get; }
         public override bool CanRead => true;
@@ -52,7 +55,7 @@ namespace MP3Player
 
             Url = url;
             HttpClient = new HttpClient();
-            Request = new HttpRequestMessage { RequestUri = new Uri(url) };
+            _readAheadBuffer = new byte[4096];
         }
 
 
@@ -75,11 +78,12 @@ namespace MP3Player
             {
                 _positionChanged = false;
                 SourceStream?.Dispose();
+                var request = new HttpRequestMessage(HttpMethod.Get, Url);
                 if (Position > 0)
                 {
-                    Request.Headers.Range = new RangeHeaderValue(Position, Length);
+                    request.Headers.Range = new RangeHeaderValue(Position, Length);
                 }
-                HttpClient.SendAsync(Request, HttpCompletionOption.ResponseHeadersRead, new CancellationToken()).ContinueWith(
+                HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, new CancellationToken()).ContinueWith(
                     response => {
                         if (_length == null && response.Result.Content.Headers.ContentLength > 0)
                         {
@@ -89,14 +93,36 @@ namespace MP3Player
                     }).Wait();
             }
 
+            // while (bytesRead < count)
+            // {
+            //     var read = SourceStream.Read(buffer, offset + bytesRead, count);
+            //     bytesRead += read;
+            //
+            //     if (read == 0)
+            //     {
+            //         break;
+            //     }
+            // }
+
             while (bytesRead < count)
             {
-                var read = SourceStream.Read(buffer, offset + bytesRead, count);
-                bytesRead += read;
-
-                if (read == 0)
+                int readAheadAvailableBytes = _readAheadLength - _readAheadOffset;
+                int bytesRequired = count - bytesRead;
+                if (readAheadAvailableBytes > 0)
                 {
-                    break;
+                    int toCopy = Math.Min(readAheadAvailableBytes, bytesRequired);
+                    Array.Copy(_readAheadBuffer, _readAheadOffset, buffer, offset + bytesRead, toCopy);
+                    bytesRead += toCopy;
+                    _readAheadOffset += toCopy;
+                }
+                else
+                {
+                    _readAheadOffset = 0;
+                    _readAheadLength = SourceStream.Read(_readAheadBuffer, 0, _readAheadBuffer.Length);
+                    if (_readAheadLength == 0)
+                    {
+                        break;
+                    }
                 }
             }
             _position += bytesRead;
@@ -143,10 +169,13 @@ namespace MP3Player
 
         protected override void Dispose(bool disposing)
         {
-            HttpClient.CancelPendingRequests();
-            HttpClient.Dispose();
-            Request.Dispose();
-            SourceStream?.Dispose();
+            if (disposing)
+            {
+                HttpClient.CancelPendingRequests();
+                HttpClient.Dispose();
+                SourceStream?.Dispose();
+            }
+
             base.Dispose(disposing);
         }
     }

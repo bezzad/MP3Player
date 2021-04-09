@@ -23,7 +23,6 @@ namespace MP3Player.Sample
     public sealed class StreamingViewModel : PlayerViewModel
     {
         private BufferedWaveProvider _bufferedWaveProvider;
-        private HttpClient _httpClient = new HttpClient();
         private Stream _reader;
         private volatile StreamingPlaybackState _playbackState;
         private object _repositionLocker = new object();
@@ -134,7 +133,7 @@ namespace MP3Player.Sample
                 // streaming play from HTTP protocol
                 if (InputPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 {
-                    Task.Run(async () => await DownloadMp3(InputPath));
+                    Task.Run(() => DownloadMp3(InputPath));
                 }
                 else // streaming play from File protocol
                 {
@@ -220,7 +219,6 @@ namespace MP3Player.Sample
                 if (!_fullyDownloaded)
                 {
                     _reader?.Dispose();
-                    _httpClient.Dispose();
                 }
 
                 _playbackState = StreamingPlaybackState.Stopped;
@@ -246,13 +244,9 @@ namespace MP3Player.Sample
                     lock (_repositionLocker)
                     {
                         var pos = (long)(_reader.Length * Position / MaxPosition);
-                        if (_httpClient != null)
+                        if (_reader is PartialHttpStream)
                         {
                             _playbackState = StreamingPlaybackState.Buffering;
-                            GetReader(InputPath, pos).ContinueWith(t =>
-                            {
-                                _reader = t.Result;
-                            });
                         }
                         
                         _reader.Position = pos;
@@ -270,22 +264,10 @@ namespace MP3Player.Sample
             _reader = new ReadFullyStream(fileStream, fileStream.Length);
             StreamMp3();
         }
-        private async Task DownloadMp3(string url)
+        private void DownloadMp3(string url)
         {
-            _reader = await GetReader(url, 0);
+            _reader = new PartialHttpStream(url);
             StreamMp3();
-        }
-        private async Task<Stream> GetReader(string url, long startPos)
-        {
-            _httpClient.CancelPendingRequests();
-            var request = new HttpRequestMessage { RequestUri = new Uri(url) };
-            if (startPos > 0)
-            {
-                request.Headers.Range = new RangeHeaderValue(startPos, _reader.Length);
-            }
-            var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, new CancellationToken());
-            var responseStream = await response.Content.ReadAsStreamAsync();
-            return new ReadFullyStream(responseStream, response.Content.Headers.ContentLength ?? responseStream.Length);
         }
         private void StreamMp3()
         {
