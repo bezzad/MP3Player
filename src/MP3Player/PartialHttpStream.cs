@@ -63,6 +63,13 @@ namespace MP3Player
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            if (buffer == null)
+                throw new ArgumentNullException(nameof(buffer));
+            if (offset < 0 || offset >= buffer.Length)
+                throw new ArgumentOutOfRangeException($"{nameof(offset)} value is: {offset}");
+            if (count < 0 || offset + count > buffer.Length)
+                throw new ArgumentOutOfRangeException($"{nameof(count)} value is: {count}");
+
             int bytesRead = 0;
             if (_positionChanged || SourceStream?.CanRead != true)
             {
