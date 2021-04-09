@@ -11,6 +11,7 @@ namespace MP3Player.Sample
 {
     public abstract class PlayerViewModel : ViewModel
     {
+        protected bool PositionChanging { get; set; }
         protected DispatcherTimer PlayerTimer { get; } = new DispatcherTimer();
         protected IWavePlayer WavePlayer { get; set; }
         protected VolumeWaveProvider16 VolumeProvider { get; set; }

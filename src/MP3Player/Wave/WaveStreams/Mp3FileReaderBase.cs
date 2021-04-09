@@ -12,11 +12,9 @@ namespace MP3Player.Wave.WaveStreams
     /// </summary>
     public class Mp3FileReaderBase : WaveStream
     {
-        private readonly WaveFormat _waveFormat;
         private Stream _mp3Stream;
         private readonly long _mp3DataLength;
         private readonly long _dataStartPosition;
-        private readonly XingHeader _xingHeader;
         private readonly bool _ownInputStream;
         private List<Mp3Index> _tableOfContents;
         private int _tocIndex;
@@ -73,9 +71,9 @@ namespace MP3Player.Wave.WaveStreams
                 if (firstFrame == null)
                     throw new InvalidDataException("Invalid MP3 file - no MP3 Frames Detected");
                 double bitRate = firstFrame.BitRate;
-                _xingHeader = XingHeader.LoadXingHeader(firstFrame);
+                XingHeader = XingHeader.LoadXingHeader(firstFrame);
                 // If the header exists, we can skip over it when decoding the rest of the file
-                if (_xingHeader != null)
+                if (XingHeader != null)
                     _dataStartPosition = _mp3Stream.Position;
 
                 // workaround for a longstanding issue with some files failing to load
@@ -125,7 +123,7 @@ namespace MP3Player.Wave.WaveStreams
                 Mp3WaveFormat = new Mp3WaveFormat(firstFrame.SampleRate,
                     firstFrame.ChannelMode == ChannelMode.Mono ? 1 : 2, firstFrame.FrameLength, (int)bitRate);
                 _decompressor = frameDecompressorBuilder(Mp3WaveFormat);
-                _waveFormat = _decompressor.OutputFormat;
+                WaveFormat = _decompressor.OutputFormat;
                 _bytesPerSample = (_decompressor.OutputFormat.BitsPerSample)/8*_decompressor.OutputFormat.Channels;
                 // no MP3 frames have more than 1152 samples in them
                 _bytesPerDecodedFrame = 1152 * _bytesPerSample;
@@ -157,9 +155,11 @@ namespace MP3Player.Wave.WaveStreams
                 Mp3Frame frame;
                 do
                 {
-                    var index = new Mp3Index();
-                    index.FilePosition = _mp3Stream.Position;
-                    index.SamplePosition = _totalSamples;
+                    var index = new Mp3Index
+                    {
+                        FilePosition = _mp3Stream.Position,
+                        SamplePosition = _totalSamples
+                    };
                     frame = ReadNextFrame(false);
                     if (frame != null)
                     {
@@ -260,7 +260,7 @@ namespace MP3Player.Wave.WaveStreams
         /// <summary>
         /// <see cref="WaveStream.WaveFormat"/>
         /// </summary>
-        public override WaveFormat WaveFormat => _waveFormat;
+        public override WaveFormat WaveFormat { get; }
 
         /// <summary>
         /// <see cref="Stream.Position"/>
@@ -413,7 +413,7 @@ namespace MP3Player.Wave.WaveStreams
         /// <summary>
         /// Xing header if present
         /// </summary>
-        public XingHeader XingHeader => _xingHeader;
+        public XingHeader XingHeader { get; }
 
         /// <summary>
         /// Disposes this WaveStream

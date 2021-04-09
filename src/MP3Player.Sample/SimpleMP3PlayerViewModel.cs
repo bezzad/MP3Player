@@ -109,10 +109,18 @@ namespace MP3Player.Sample
 
         protected override void OnTick(object sender, EventArgs eventArgs)
         {
-            if (_reader != null)
+            try
             {
-                Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
-                OnPropertyChanged(nameof(PositionPercent));
+                if (_reader != null)
+                {
+                    PositionChanging = true;
+                    Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
+                    OnPropertyChanged(nameof(PositionPercent));
+                }
+            }
+            finally
+            {
+                PositionChanging = false;
             }
         }
 
@@ -120,7 +128,10 @@ namespace MP3Player.Sample
         {
             if (_reader != null)
             {
-                _reader.Position = (long)(_reader.Length * Position / MaxPosition);
+                if (PositionChanging == false) // position changed with timer so _reader is up to date
+                {
+                    _reader.Position = (long)(_reader.Length * Position / MaxPosition);
+                }
                 CurrentTime = _reader.CurrentTime;
                 OnPropertyChanged(nameof(PositionPercent));
             }
