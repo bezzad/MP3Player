@@ -158,38 +158,51 @@ namespace MP3Player.Sample
 
         protected override void OnTick(object sender, EventArgs eventArgs)
         {
-            if (_playbackState != StreamingPlaybackState.Stopped)
+            try
             {
-                if (WavePlayer == null && _bufferedWaveProvider != null)
+                if (_playbackState != StreamingPlaybackState.Stopped)
                 {
-                    Debug.WriteLine("Creating WaveOut Device");
-                    CreatePlayer();
-                    VolumeProvider = new VolumeWaveProvider16(_bufferedWaveProvider) { Volume = Volume / 100 };
-                    WavePlayer.Init(VolumeProvider);
-                    MaximumBufferProgress = (int)_bufferedWaveProvider.BufferDuration.TotalMilliseconds;
+                    if (_reader != null)
+                    {
+                        PositionChanging = true;
+                        Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
+                        OnPropertyChanged(nameof(PositionPercent));
+                    }
+                    if (WavePlayer == null && _bufferedWaveProvider != null)
+                    {
+                        Debug.WriteLine("Creating WaveOut Device");
+                        CreatePlayer();
+                        VolumeProvider = new VolumeWaveProvider16(_bufferedWaveProvider) { Volume = Volume / 100 };
+                        WavePlayer.Init(VolumeProvider);
+                        MaximumBufferProgress = (int)_bufferedWaveProvider.BufferDuration.TotalMilliseconds;
+                    }
+                    else if (_bufferedWaveProvider != null)
+                    {
+                        var bufferedSeconds = _bufferedWaveProvider.BufferedDuration.TotalSeconds;
+                        ShowBufferState(bufferedSeconds);
+                        // make it stutter less if we buffer up a decent amount before playing
+                        if (bufferedSeconds < 0.5 && _playbackState == StreamingPlaybackState.Playing && !_fullyDownloaded)
+                        {
+                            _playbackState = StreamingPlaybackState.Buffering;
+                            WavePlayer.Pause();
+                        }
+                        else if (bufferedSeconds >= 1 && _playbackState == StreamingPlaybackState.Buffering)
+                        {
+                            WavePlayer.Play();
+                            _playbackState = StreamingPlaybackState.Playing;
+                        }
+                        else if (_fullyDownloaded && bufferedSeconds == 0)
+                        {
+                            Debug.WriteLine("Reached end of stream");
+                            StopPlayback();
+                        }
+                    }
+                    UpdatePlayerState();
                 }
-                else if (_bufferedWaveProvider != null)
-                {
-                    var bufferedSeconds = _bufferedWaveProvider.BufferedDuration.TotalSeconds;
-                    ShowBufferState(bufferedSeconds);
-                    // make it stutter less if we buffer up a decent amount before playing
-                    if (bufferedSeconds < 0.5 && _playbackState == StreamingPlaybackState.Playing && !_fullyDownloaded)
-                    {
-                        _playbackState = StreamingPlaybackState.Buffering;
-                        WavePlayer.Pause();
-                    }
-                    else if (bufferedSeconds >= 1 && _playbackState == StreamingPlaybackState.Buffering)
-                    {
-                        WavePlayer.Play();
-                        _playbackState = StreamingPlaybackState.Playing;
-                    }
-                    else if (_fullyDownloaded && bufferedSeconds == 0)
-                    {
-                        Debug.WriteLine("Reached end of stream");
-                        StopPlayback();
-                    }
-                }
-                UpdatePlayerState();
+            }
+            finally
+            {
+                PositionChanging = false;
             }
         }
 
@@ -220,8 +233,11 @@ namespace MP3Player.Sample
         {
             if (_reader != null)
             {
-                _reader.Position = (long)(_reader.Length * Position / MaxPosition);
-                // CurrentTime = _reader.CurrentTime;
+                if (PositionChanging == false) // position changed with timer so _reader is up to date
+                {
+                    _reader.Position = (long)(_reader.Length * Position / MaxPosition);
+                }
+                CurrentTime = TimeSpan.FromSeconds((double)_reader.Position / Mp3WaveFormat.AverageBytesPerSecond);
                 OnPropertyChanged(nameof(PositionPercent));
             }
         }
@@ -278,9 +294,14 @@ namespace MP3Player.Sample
                                 }
 
                                 int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
-                                //Debug.WriteLine(String.Format("Decompressed a frame {0}", decompressed));
                                 _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
-                                CurrentTime = TimeSpan.FromSeconds((double)_reader.Position / Mp3WaveFormat.AverageBytesPerSecond);
+                            }
+                            else // end of stream
+                            {
+                                Thread.Sleep(MaxBufferSizeSeconds);
+                                _fullyDownloaded = true;
+                                // reached the end of the MP3 file / stream
+                                break;
                             }
                         }
                         catch (EndOfStreamException)
