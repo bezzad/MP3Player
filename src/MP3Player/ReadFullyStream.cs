@@ -25,7 +25,7 @@ namespace MP3Player
 
         public override void Flush()
         {
-            _sourceStream.Flush();
+            throw new InvalidOperationException();
         }
 
         public override long Length { get; }
