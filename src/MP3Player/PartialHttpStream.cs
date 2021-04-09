@@ -11,12 +11,11 @@ namespace MP3Player
     {
         private long? _length;
         private long _position;
-        private bool _positionChanged = false;
-
+        private bool _positionChanged;
         private readonly byte[] _readAheadBuffer;
         private int _readAheadLength;
         private int _readAheadOffset;
-
+        
         protected readonly HttpClient HttpClient;
         protected Stream SourceStream;
 
@@ -58,7 +57,6 @@ namespace MP3Player
             _readAheadBuffer = new byte[4096];
         }
 
-
         public override void Flush()
         {
             throw new InvalidOperationException();
@@ -92,17 +90,6 @@ namespace MP3Player
                         SourceStream = response.Result.Content.ReadAsStreamAsync().Result;
                     }).Wait();
             }
-
-            // while (bytesRead < count)
-            // {
-            //     var read = SourceStream.Read(buffer, offset + bytesRead, count);
-            //     bytesRead += read;
-            //
-            //     if (read == 0)
-            //     {
-            //         break;
-            //     }
-            // }
 
             while (bytesRead < count)
             {
