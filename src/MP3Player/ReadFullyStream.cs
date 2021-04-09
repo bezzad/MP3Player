@@ -17,15 +17,15 @@ namespace MP3Player
             Length = contentLength;
             _readAheadBuffer = new byte[4096];
         }
-        public override bool CanRead => true;
+        public override bool CanRead => _sourceStream.CanRead;
 
-        public override bool CanSeek => false;
+        public override bool CanSeek => _sourceStream.CanSeek;
 
         public override bool CanWrite => false;
 
         public override void Flush()
         {
-            throw new InvalidOperationException();
+            _sourceStream.Flush();
         }
 
         public override long Length { get; }
@@ -68,7 +68,7 @@ namespace MP3Player
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            if (_sourceStream.CanSeek)
+            if (CanSeek)
             {
                 _pos = offset;
                 return _sourceStream.Seek(offset, origin);
@@ -79,7 +79,7 @@ namespace MP3Player
 
         public override void SetLength(long value)
         {
-            throw new InvalidOperationException();
+            _sourceStream.SetLength(value);
         }
 
         public override void Write(byte[] buffer, int offset, int count)
