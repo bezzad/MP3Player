@@ -66,16 +66,19 @@ namespace MP3Player
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
             if (offset < 0 || offset >= buffer.Length)
-                throw new ArgumentOutOfRangeException($"{nameof(offset)} value is: {offset}");
+                throw new ArgumentOutOfRangeException(nameof(offset));
             if (count < 0 || offset + count > buffer.Length)
-                throw new ArgumentOutOfRangeException($"{nameof(count)} value is: {count}");
+                throw new ArgumentOutOfRangeException(nameof(count));
 
             int bytesRead = 0;
             if (_positionChanged || SourceStream?.CanRead != true)
             {
                 _positionChanged = false;
                 SourceStream?.Dispose();
-                Request.Headers.Range = new RangeHeaderValue(_position, Length);
+                if (Position > 0)
+                {
+                    Request.Headers.Range = new RangeHeaderValue(Position, Length);
+                }
                 HttpClient.SendAsync(Request, HttpCompletionOption.ResponseHeadersRead, new CancellationToken()).ContinueWith(
                     response => {
                         if (_length == null && response.Result.Content.Headers.ContentLength > 0)
