@@ -236,6 +236,7 @@ namespace MP3Player.Sample
                 if (PositionChanging == false) // position changed with timer so _reader is up to date
                 {
                     _reader.Position = (long)(_reader.Length * Position / MaxPosition);
+                    _bufferedWaveProvider.ClearBuffer();
                 }
                 CurrentTime = TimeSpan.FromSeconds((double)_reader.Position / Mp3WaveFormat.AverageBytesPerSecond);
                 OnPropertyChanged(nameof(PositionPercent));
@@ -287,8 +288,8 @@ namespace MP3Player.Sample
                                     _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
                                         // allow us to get well ahead of ourselves
                                         BufferDuration = TimeSpan.FromSeconds(MaxBufferSizeSeconds),
-                                        DiscardOnBufferOverflow = false,
-                                        ReadFully = false
+                                        DiscardOnBufferOverflow = true,
+                                        ReadFully = true
                                     };
                                     Duration = TimeSpan.FromSeconds((double)_reader.Length / Mp3WaveFormat.AverageBytesPerSecond);
                                 }
@@ -298,10 +299,7 @@ namespace MP3Player.Sample
                             }
                             else // end of stream
                             {
-                                Thread.Sleep(MaxBufferSizeSeconds);
-                                _fullyDownloaded = true;
-                                // reached the end of the MP3 file / stream
-                                break;
+                                throw new EndOfStreamException("Stream fully loaded");
                             }
                         }
                         catch (EndOfStreamException)

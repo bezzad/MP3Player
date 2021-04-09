@@ -33,14 +33,7 @@ namespace MP3Player
         public override long Position
         {
             get => _pos;
-            set
-            {
-                if (_sourceStream.CanSeek)
-                {
-                    _pos = value;
-                    _sourceStream.Seek(value, SeekOrigin.Current);
-                }
-            }
+            set => Seek(value, SeekOrigin.Begin);
         }
 
 
@@ -75,7 +68,13 @@ namespace MP3Player
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new InvalidOperationException();
+            if (_sourceStream.CanSeek)
+            {
+                _pos = offset;
+                return _sourceStream.Seek(offset, origin);
+            }
+
+            return 0;
         }
 
         public override void SetLength(long value)
