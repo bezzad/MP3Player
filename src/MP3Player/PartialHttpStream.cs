@@ -158,8 +158,7 @@ namespace MP3Player
         {
             if (disposing)
             {
-                HttpClient.CancelPendingRequests();
-                HttpClient.Dispose();
+                HttpClient?.Dispose();
                 SourceStream?.Dispose();
             }
 
