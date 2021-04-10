@@ -45,7 +45,7 @@ namespace MP3Player.Sample
             OpenFileCommand = new RelayCommand(OpenFile);
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
-            PlayerTimer.Interval = TimeSpan.FromMilliseconds(500);
+            PlayerTimer.Interval = TimeSpan.FromMilliseconds(300);
             PlayerTimer.Tick += OnTick;
         }
 
