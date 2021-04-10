@@ -9,8 +9,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,10 +23,10 @@ namespace MP3Player.Sample
         private BufferedWaveProvider _bufferedWaveProvider;
         private Stream _reader;
         private volatile StreamingPlaybackState _playbackState;
-        private object _repositionLocker = new object();
+        private readonly object _repositionLocker = new object();
 
         private volatile bool _fullyDownloaded;
-        private const int MaxBufferSizeSeconds = 5;
+        private const int MaxBufferSizeSeconds = 2;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
@@ -76,11 +74,21 @@ namespace MP3Player.Sample
         }
         protected override void OnBackward()
         {
-
+            if (_reader != null)
+            {
+                _reader.Position = Math.Max(_reader.Position - (long)Mp3WaveFormat.AverageBytesPerSecond * 10, 0);
+                _bufferedWaveProvider.ClearBuffer();
+                OnPropertyChanged(nameof(Position));
+            }
         }
         protected override void OnForward()
         {
-
+            if (_reader != null)
+            {
+                _reader.Position = Math.Min(_reader.Position + (long)Mp3WaveFormat.AverageBytesPerSecond * 10, _reader.Length-1);
+                _bufferedWaveProvider.ClearBuffer();
+                OnPropertyChanged(nameof(Position));
+            }
         }
         protected override void UpdatePlayerState()
         {
@@ -248,7 +256,7 @@ namespace MP3Player.Sample
                         {
                             _playbackState = StreamingPlaybackState.Buffering;
                         }
-                        
+
                         _reader.Position = pos;
                         _bufferedWaveProvider.ClearBuffer();
                     }
