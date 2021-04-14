@@ -25,7 +25,7 @@ namespace MP3Player.Sample
         private volatile StreamingPlaybackState _playbackState;
         private readonly object _repositionLocker = new object();
         private volatile bool _fullyDownloaded;
-        private const int MaxBufferSizeSeconds = 3;
+        private const int MaxBufferSizeSeconds = 20;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
@@ -73,18 +73,20 @@ namespace MP3Player.Sample
         {
             if (_reader != null)
             {
-                _reader.Position = Math.Max(_reader.Position - (long)Mp3WaveFormat.AverageBytesPerSecond * 10, 0);
-                _bufferedWaveProvider.ClearBuffer();
-                OnPropertyChanged(nameof(Position));
+                lock (_repositionLocker)
+                {
+                    Position = Math.Max(Position - (long)Mp3WaveFormat.AverageBytesPerSecond * 10, 0);
+                }
             }
         }
         protected override void OnForward()
         {
             if (_reader != null)
             {
-                _reader.Position = Math.Min(_reader.Position + (long)Mp3WaveFormat.AverageBytesPerSecond * 10, _reader.Length-1);
-                _bufferedWaveProvider.ClearBuffer();
-                OnPropertyChanged(nameof(Position));
+                lock (_repositionLocker)
+                {
+                    Position = Math.Min(Position + (long)Mp3WaveFormat.AverageBytesPerSecond * 10, _reader.Length-1);
+                }
             }
         }
         protected override void UpdatePlayerState()
@@ -175,8 +177,7 @@ namespace MP3Player.Sample
                         lock (_repositionLocker)
                         {
                             PositionChanging = true;
-                            // var newPos = Math.Min(MaxPosition, _reader.Position - _bufferedWaveProvider?.BufferedBytes ?? 0);
-                            var newPos = Math.Min(MaxPosition, _reader.Position);
+                            var newPos = Math.Min(MaxPosition, _reader.Position - (Mp3WaveFormat?.AverageBytesPerSecond ?? 0) * MaxBufferSizeSeconds);
                             Position = newPos < 0 ? _reader.Position : newPos;
                             OnPropertyChanged(nameof(PositionPercent));
                         }
@@ -293,32 +294,35 @@ namespace MP3Player.Sample
                     {
                         try
                         {
-                            var frame = Mp3Frame.LoadFromStream(_reader);
-                            if (frame != null)
+                            lock (_repositionLocker)
                             {
-                                if (deCompressor == null)
+                                var frame = Mp3Frame.LoadFromStream(_reader);
+                                if (frame != null)
                                 {
-                                    // don't think these details matter too much - just help ACM select the right codec
-                                    // however, the buffered provider doesn't know what sample rate it is working at
-                                    // until we have a frame
-                                    deCompressor = CreateFrameDeCompressor(frame);
-                                    _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
-                                        // allow us to get well ahead of ourselves
-                                        BufferDuration = TimeSpan.FromSeconds(MaxBufferSizeSeconds),
-                                        DiscardOnBufferOverflow = true,
-                                        ReadFully = true
-                                    };
-                                    MaxPosition = _reader.Length;
-                                    Duration = TimeSpan.FromSeconds((double)_reader.Length /
-                                                                    Mp3WaveFormat.AverageBytesPerSecond);
-                                }
+                                    if (deCompressor == null)
+                                    {
+                                        // don't think these details matter too much - just help ACM select the right codec
+                                        // however, the buffered provider doesn't know what sample rate it is working at
+                                        // until we have a frame
+                                        deCompressor = CreateFrameDeCompressor(frame);
+                                        _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
+                                            // allow us to get well ahead of ourselves
+                                            BufferDuration = TimeSpan.FromSeconds(MaxBufferSizeSeconds),
+                                            DiscardOnBufferOverflow = true,
+                                            ReadFully = true
+                                        };
+                                        MaxPosition = _reader.Length;
+                                        Duration = TimeSpan.FromSeconds((double)_reader.Length /
+                                                                        Mp3WaveFormat.AverageBytesPerSecond);
+                                    }
 
-                                int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
-                                _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
-                            }
-                            else // end of stream
-                            {
-                                throw new EndOfStreamException("Stream fully loaded");
+                                    int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
+                                    _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
+                                }
+                                else // end of stream
+                                {
+                                    throw new EndOfStreamException("Stream fully loaded");
+                                }
                             }
                         }
                         catch (EndOfStreamException)

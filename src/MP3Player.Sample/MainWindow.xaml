@@ -159,7 +159,7 @@
                     <ProgressBar Value="{Binding BufferProgress, Mode=OneWay}" 
                                  sample:VisibilityHelper.IsVisible="{Binding IsStreaming, Mode=OneWay}"
                                  Maximum="{Binding MaxPosition, Mode=OneWay}"
-                                 Height="4" VerticalAlignment="Center" Margin="1,0,0,0"
+                                 Height="4" VerticalAlignment="Center" Margin="0,0,0,0"
                                  Background="Transparent"/>
                     <sample:FormattedSlider
                         Style="{StaticResource MaterialDesignSlider}"
