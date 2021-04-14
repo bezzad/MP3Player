@@ -24,9 +24,8 @@ namespace MP3Player.Sample
         private Stream _reader;
         private volatile StreamingPlaybackState _playbackState;
         private readonly object _repositionLocker = new object();
-
         private volatile bool _fullyDownloaded;
-        private const int MaxBufferSizeSeconds = 5;
+        private const int MaxBufferSizeSeconds = 3;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
@@ -35,9 +34,7 @@ namespace MP3Player.Sample
             < _bufferedWaveProvider.WaveFormat.AverageBytesPerSecond / MaxBufferSizeSeconds;
 
         public bool IsBuffering => _playbackState == StreamingPlaybackState.Buffering;
-        public int BufferProgress { get; set; }
-        public int MaximumBufferProgress { get; set; }
-        public string BufferProgressText { get; set; }
+        public long BufferProgress { get; set; }
         public bool SpeedNormal => SpeedState == Speed.Normal;
         public bool SpeedFast => SpeedState == Speed.Fast;
         public bool SpeedFastest => SpeedState == Speed.Fastest;
@@ -178,7 +175,9 @@ namespace MP3Player.Sample
                         lock (_repositionLocker)
                         {
                             PositionChanging = true;
-                            Position = Math.Min(MaxPosition, _reader.Position * MaxPosition / _reader.Length);
+                            // var newPos = Math.Min(MaxPosition, _reader.Position - _bufferedWaveProvider?.BufferedBytes ?? 0);
+                            var newPos = Math.Min(MaxPosition, _reader.Position);
+                            Position = newPos < 0 ? _reader.Position : newPos;
                             OnPropertyChanged(nameof(PositionPercent));
                         }
                     }
@@ -188,7 +187,6 @@ namespace MP3Player.Sample
                         CreatePlayer();
                         VolumeProvider = new VolumeWaveProvider16(_bufferedWaveProvider) { Volume = Volume / 100 };
                         WavePlayer.Init(VolumeProvider);
-                        MaximumBufferProgress = (int)_bufferedWaveProvider.BufferDuration.TotalMilliseconds;
                     }
                     else if (_bufferedWaveProvider != null)
                     {
@@ -247,21 +245,20 @@ namespace MP3Player.Sample
         {
             if (_reader != null)
             {
-                if (PositionChanging == false) // position changed with timer so _reader is up to date
+                lock (_repositionLocker)
                 {
-                    lock (_repositionLocker)
+                    if (PositionChanging == false) // position changed with timer so _reader is up to date
                     {
-                        var pos = (long)(_reader.Length * Position / MaxPosition);
                         if (_reader is PartialHttpStream)
                         {
                             _playbackState = StreamingPlaybackState.Buffering;
                         }
 
-                        _reader.Position = pos;
                         _bufferedWaveProvider.ClearBuffer();
+                        _reader.Position = Position;
                     }
                 }
-                CurrentTime = TimeSpan.FromSeconds((double)_reader.Position / Mp3WaveFormat.AverageBytesPerSecond);
+                CurrentTime = TimeSpan.FromSeconds((double)Position / Mp3WaveFormat.AverageBytesPerSecond);
                 OnPropertyChanged(nameof(PositionPercent));
             }
         }
@@ -296,34 +293,32 @@ namespace MP3Player.Sample
                     {
                         try
                         {
-                            lock (_repositionLocker)
+                            var frame = Mp3Frame.LoadFromStream(_reader);
+                            if (frame != null)
                             {
-                                var frame = Mp3Frame.LoadFromStream(_reader);
-                                if (frame != null)
+                                if (deCompressor == null)
                                 {
-                                    if (deCompressor == null)
-                                    {
-                                        // don't think these details matter too much - just help ACM select the right codec
-                                        // however, the buffered provider doesn't know what sample rate it is working at
-                                        // until we have a frame
-                                        deCompressor = CreateFrameDeCompressor(frame);
-                                        _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
-                                            // allow us to get well ahead of ourselves
-                                            BufferDuration = TimeSpan.FromSeconds(MaxBufferSizeSeconds),
-                                            DiscardOnBufferOverflow = true,
-                                            ReadFully = true
-                                        };
-                                        Duration = TimeSpan.FromSeconds((double)_reader.Length /
-                                                                        Mp3WaveFormat.AverageBytesPerSecond);
-                                    }
+                                    // don't think these details matter too much - just help ACM select the right codec
+                                    // however, the buffered provider doesn't know what sample rate it is working at
+                                    // until we have a frame
+                                    deCompressor = CreateFrameDeCompressor(frame);
+                                    _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
+                                        // allow us to get well ahead of ourselves
+                                        BufferDuration = TimeSpan.FromSeconds(MaxBufferSizeSeconds),
+                                        DiscardOnBufferOverflow = true,
+                                        ReadFully = true
+                                    };
+                                    MaxPosition = _reader.Length;
+                                    Duration = TimeSpan.FromSeconds((double)_reader.Length /
+                                                                    Mp3WaveFormat.AverageBytesPerSecond);
+                                }
 
-                                    int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
-                                    _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
-                                }
-                                else // end of stream
-                                {
-                                    throw new EndOfStreamException("Stream fully loaded");
-                                }
+                                int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
+                                _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
+                            }
+                            else // end of stream
+                            {
+                                throw new EndOfStreamException("Stream fully loaded");
                             }
                         }
                         catch (EndOfStreamException)
@@ -370,8 +365,7 @@ namespace MP3Player.Sample
         }
         private void ShowBufferState(double totalSeconds)
         {
-            BufferProgressText = $"{totalSeconds:0.0}s";
-            BufferProgress = (int)(totalSeconds * 1000);
+            BufferProgress = (long)(MaxPosition * (CurrentTime.TotalSeconds + totalSeconds) / Duration.TotalSeconds);
         }
 
         public override void Dispose()

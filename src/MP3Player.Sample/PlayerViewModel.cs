@@ -22,9 +22,9 @@ namespace MP3Player.Sample
         public float Volume { get; set; } = 100;
         public TimeSpan Duration { get; set; }
         public TimeSpan CurrentTime { get; set; }
-        public double Position { get; set; }
-        public double MaxPosition { get; set; } = 1000;
-        public double PositionPercent => Position / MaxPosition;
+        public long Position { get; set; }
+        public long MaxPosition { get; set; } = 1000;
+        public double PositionPercent => (double)Position / MaxPosition;
         public bool IsMute { get; set; }
         public bool IsStreaming { get; set; }
         public bool IsPlaying => WavePlayer != null && WavePlayer.PlaybackState == PlaybackState.Playing;
@@ -45,7 +45,7 @@ namespace MP3Player.Sample
             OpenFileCommand = new RelayCommand(OpenFile);
             ForwardCommand = new RelayCommand(OnForward);
             BackwardCommand = new RelayCommand(OnBackward);
-            PlayerTimer.Interval = TimeSpan.FromMilliseconds(300);
+            PlayerTimer.Interval = TimeSpan.FromMilliseconds(500);
             PlayerTimer.Tick += OnTick;
         }
 

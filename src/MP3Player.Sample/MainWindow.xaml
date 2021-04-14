@@ -62,20 +62,6 @@
                          materialDesign:HintAssist.HelperTextFontSize="16" />
             </DockPanel>
         </DockPanel>
-        <Grid DockPanel.Dock="Bottom" Margin="0, 0, 0, -10" Height="20"
-                   sample:VisibilityHelper.IsVisible="{Binding IsStreaming, Mode=OneWay}">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="60" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="60" />
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Column="0" Text="Bufferd:" FontSize="10" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
-            <ProgressBar Grid.Column="1" Value="{Binding BufferProgress, Mode=OneWay}" 
-                         Maximum="{Binding MaximumBufferProgress, Mode=OneWay}" 
-                         Height="10" VerticalAlignment="Bottom"
-                         Background="LightGray"/>
-            <TextBlock Grid.Column="2" Text="{Binding BufferProgressText, Mode=OneWay}" FontSize="10" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
-        </Grid>
         <DockPanel Dock="Right" VerticalAlignment="Top" Margin="10" Height="50">
             <Button Background="Transparent" BorderThickness="0" Cursor="Hand"
                         Command="{Binding MuteCommand}"
@@ -169,22 +155,29 @@
             <DockPanel Margin="10">
                 <TextBlock Text="{Binding Duration, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}}" DockPanel.Dock="Right"/>
                 <TextBlock Text="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}}" DockPanel.Dock="Left" />
-                <sample:FormattedSlider
-                    Style="{StaticResource MaterialDesignSlider}"
-                    TickFrequency="1" Margin="12,0" 
-                    ClipToBounds="False" 
-                    IsDirectionReversed="False"
-                    AutoToolTipPlacement="TopLeft"
-                    AutoToolTipPrecision="0"
-                    AutoToolTipFormat="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}, UpdateSourceTrigger=PropertyChanged}"
-                    TickPlacement="None"
-                    IsMoveToPointEnabled="True"
-                    Orientation="Horizontal" 
-                    Minimum="0" Maximum="{Binding MaxPosition, Mode=OneWay}"
-                    Focusable="False" Cursor="Hand"
-                    IsSnapToTickEnabled="True"
-                    Value="{Binding Position}">
-                </sample:FormattedSlider>
+                <Grid Margin="12,0">
+                    <ProgressBar Value="{Binding BufferProgress, Mode=OneWay}" 
+                                 sample:VisibilityHelper.IsVisible="{Binding IsStreaming, Mode=OneWay}"
+                                 Maximum="{Binding MaxPosition, Mode=OneWay}"
+                                 Height="4" VerticalAlignment="Center" Margin="1,0,0,0"
+                                 Background="Transparent"/>
+                    <sample:FormattedSlider
+                        Style="{StaticResource MaterialDesignSlider}"
+                        TickFrequency="1" 
+                        ClipToBounds="False" 
+                        IsDirectionReversed="False"
+                        AutoToolTipPlacement="TopLeft"
+                        AutoToolTipPrecision="0"
+                        AutoToolTipFormat="{Binding CurrentTime, Mode=OneWay, StringFormat={}{0:hh':'mm':'ss}, UpdateSourceTrigger=PropertyChanged}"
+                        TickPlacement="None"
+                        IsMoveToPointEnabled="True"
+                        Orientation="Horizontal" 
+                        Minimum="0" Maximum="{Binding MaxPosition, Mode=OneWay}"
+                        Focusable="False" Cursor="Hand"
+                        IsSnapToTickEnabled="True"
+                        Value="{Binding Position}">
+                    </sample:FormattedSlider>
+                </Grid>
             </DockPanel>
         </DockPanel>
     </DockPanel>
