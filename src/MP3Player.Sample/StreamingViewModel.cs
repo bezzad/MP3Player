@@ -218,7 +218,7 @@ namespace MP3Player.Sample
                 lock (_repositionLocker)
                 {
                     PositionChanging = true;
-                    var outputBufferedDuration = _bufferedWaveProvider.BufferedDuration;
+                    var outputBufferedDuration = _bufferedWaveProvider?.BufferedDuration ?? new TimeSpan(0);
                     var inputBufferedBytes = outputBufferedDuration.TotalSeconds * (Mp3WaveFormat?.AverageBytesPerSecond ?? 0);
                     var newPos = Math.Min(MaxPosition, _reader.Position - (long)inputBufferedBytes);
                     Position = newPos < 0 ? _reader.Position : newPos;
