@@ -4,20 +4,21 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading;
+using MP3Player.Utils;
 
 namespace MP3Player
 {
     public class PartialHttpStream : Stream
     {
+        private const int BufferChunkSize = 4096;
         private long? _length;
+        private long _streamPosition;
         private long _position;
-        private bool _positionChanged;
-        private readonly byte[] _readAheadBuffer;
         private int _readAheadLength;
-        private int _readAheadOffset;
-        
-        protected readonly HttpClient HttpClient;
-        protected Stream SourceStream;
+        private readonly byte[] _readAheadBuffer;
+        private byte?[] _cache;
+        private readonly HttpClient _httpClient;
+        private Stream _sourceStream;
 
         public string Url { get; }
         public override bool CanRead => true;
@@ -53,8 +54,8 @@ namespace MP3Player
             }
 
             Url = url;
-            HttpClient = new HttpClient();
-            _readAheadBuffer = new byte[4096];
+            _httpClient = new HttpClient();
+            _readAheadBuffer = new byte[BufferChunkSize];
         }
 
         public override void Flush()
@@ -72,53 +73,53 @@ namespace MP3Player
                 throw new ArgumentOutOfRangeException(nameof(count));
 
             int bytesRead = 0;
-            if (_positionChanged || SourceStream?.CanRead != true)
+            while (bytesRead < count)
             {
-                _positionChanged = false;
-                SourceStream?.Dispose();
-                var request = new HttpRequestMessage(HttpMethod.Get, Url);
-                if (Position > 0)
+                if (_cache?[Position] != null)
                 {
-                    request.Headers.Range = new RangeHeaderValue(Position, Length);
+                    buffer[offset + bytesRead++] = _cache[_position++].Value;
                 }
-                HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, new CancellationToken()).ContinueWith(
+                else
+                {
+                    SetStreamPosition(Position);
+                    _readAheadLength = _sourceStream.Read(_readAheadBuffer, 0, _readAheadBuffer.Length);
+                    _streamPosition += _readAheadLength;
+                    if (_readAheadLength == 0)
+                    {
+                        break;
+                    }
+                    // write to cache
+                    _readAheadBuffer.Copy(0, _cache, _position, _readAheadLength);
+                }
+            }
+
+            return bytesRead;
+        }
+        
+        private void SetStreamPosition(long pos)
+        {
+            if (_sourceStream == null || _streamPosition != pos)
+            {
+                _sourceStream?.Dispose();
+                _streamPosition = pos;
+                var request = new HttpRequestMessage(HttpMethod.Get, Url);
+                if (_length != null && _streamPosition > 0)
+                {
+                    request.Headers.Range = new RangeHeaderValue(_streamPosition, Length);
+                }
+                _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, new CancellationToken()).ContinueWith(
                     response => {
                         if (_length == null && response.Result.Content.Headers.ContentLength > 0)
                         {
                             SetLength(response.Result.Content.Headers.ContentLength ?? 0);
                         }
-                        SourceStream = response.Result.Content.ReadAsStreamAsync().Result;
+                        _sourceStream = response.Result.Content.ReadAsStreamAsync().Result;
                     }).Wait();
             }
-
-            while (bytesRead < count)
-            {
-                int readAheadAvailableBytes = _readAheadLength - _readAheadOffset;
-                int bytesRequired = count - bytesRead;
-                if (readAheadAvailableBytes > 0)
-                {
-                    int toCopy = Math.Min(readAheadAvailableBytes, bytesRequired);
-                    Array.Copy(_readAheadBuffer, _readAheadOffset, buffer, offset + bytesRead, toCopy);
-                    bytesRead += toCopy;
-                    _readAheadOffset += toCopy;
-                }
-                else
-                {
-                    _readAheadOffset = 0;
-                    _readAheadLength = SourceStream.Read(_readAheadBuffer, 0, _readAheadBuffer.Length);
-                    if (_readAheadLength == 0)
-                    {
-                        break;
-                    }
-                }
-            }
-            _position += bytesRead;
-            return bytesRead;
         }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            _positionChanged = true;
             switch (origin)
             {
                 case SeekOrigin.End:
@@ -140,6 +141,7 @@ namespace MP3Player
         public override void SetLength(long value)
         {
             _length = value;
+            _cache = new byte?[value];
         }
 
         public override void Write(byte[] buffer, int offset, int count)
@@ -158,8 +160,8 @@ namespace MP3Player
         {
             if (disposing)
             {
-                HttpClient?.Dispose();
-                SourceStream?.Dispose();
+                _httpClient?.Dispose();
+                _sourceStream?.Dispose();
             }
 
             base.Dispose(disposing);
