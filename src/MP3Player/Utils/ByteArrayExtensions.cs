@@ -114,42 +114,5 @@ namespace MP3Player.Utils
                 offset++;
             }
         }
-
-        /// <summary>
-        ///     Copies a range of elements from an System.Array starting at the specified source
-        ///     index and pastes them to another System.Array starting at the specified destination
-        ///     index. The length and the indexes are specified as 64-bit integers.
-        /// </summary>
-        /// <param name="sourceArray">The System.Array that contains the data to copy.</param>
-        /// <param name="sourceIndex">A 64-bit integer that represents the index in the sourceArray at which copying begins.</param>
-        /// <param name="destinationArray">The System.Array that receives the data.</param>
-        /// <param name="destinationIndex">A 64-bit integer that represents the index in the destinationArray at which storing begins.</param>
-        /// <param name="length">
-        ///     A 64-bit integer that represents the number of elements to copy. The integer
-        ///     must be between zero and System.Int32.MaxValue, inclusive.
-        /// </param>
-        /// <exception cref="System.ArgumentNullException">sourceArray is null. -or- destinationArray is null.</exception>
-        /// <exception cref="System.RankException">sourceArray and destinationArray have different ranks.</exception>
-        /// <exception cref="System.ArrayTypeMismatchException">sourceArray and destinationArray are of incompatible types.</exception>
-        /// <exception cref="System.InvalidCastException">At least one element in sourceArray cannot be cast to the type of destinationArray.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">
-        ///     sourceIndex is outside the range of valid indexes for the sourceArray. -or- destinationIndex
-        ///     is outside the range of valid indexes for the destinationArray. -or- length is
-        ///     less than 0 or greater than System.Int32.MaxValue.
-        /// </exception>
-        /// <exception cref="System.ArgumentException">
-        ///     length is greater than the number of elements from sourceIndex to the end of
-        ///     sourceArray. -or- length is greater than the number of elements from destinationIndex
-        ///     to the end of destinationArray.
-        /// </exception>
-        public static void Copy(this byte?[] sourceArray, long sourceIndex, byte[] destinationArray, long destinationIndex, long length)
-        {
-            long offset = 0;
-            while (offset < length)
-            {
-                destinationArray[destinationIndex + offset] = sourceArray[sourceIndex + offset].GetValueOrDefault();
-                offset++;
-            }
-        }
     }
 }
