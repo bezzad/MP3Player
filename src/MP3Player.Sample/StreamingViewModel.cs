@@ -362,7 +362,7 @@ namespace MP3Player.Sample
             }
             catch (Exception e)
             {
-                Dispatcher.CurrentDispatcher.BeginInvoke(() => MessageBox.Show(e.Message));
+                Debug.WriteLine(e.Message);
             }
             finally
             {
