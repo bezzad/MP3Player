@@ -172,16 +172,8 @@ namespace MP3Player.Sample
             {
                 if (_playbackState != StreamingPlaybackState.Stopped)
                 {
-                    if (_reader != null)
-                    {
-                        lock (_repositionLocker)
-                        {
-                            PositionChanging = true;
-                            var newPos = Math.Min(MaxPosition, _reader.Position - (Mp3WaveFormat?.AverageBytesPerSecond ?? 0) * MaxBufferSizeSeconds);
-                            Position = newPos < 0 ? _reader.Position : newPos;
-                            OnPropertyChanged(nameof(PositionPercent));
-                        }
-                    }
+                    UpdatePosition();
+
                     if (WavePlayer == null && _bufferedWaveProvider != null)
                     {
                         Debug.WriteLine("Creating WaveOut Device");
@@ -216,6 +208,22 @@ namespace MP3Player.Sample
             finally
             {
                 PositionChanging = false;
+            }
+        }
+
+        private void UpdatePosition()
+        {
+            if (_reader != null)
+            {
+                lock (_repositionLocker)
+                {
+                    PositionChanging = true;
+                    var outputBufferedDuration = _bufferedWaveProvider.BufferedDuration;
+                    var inputBufferedBytes = outputBufferedDuration.TotalSeconds * (Mp3WaveFormat?.AverageBytesPerSecond ?? 0);
+                    var newPos = Math.Min(MaxPosition, _reader.Position - (long)inputBufferedBytes);
+                    Position = newPos < 0 ? _reader.Position : newPos;
+                    OnPropertyChanged(nameof(PositionPercent));
+                }
             }
         }
 
