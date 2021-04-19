@@ -25,7 +25,7 @@ namespace MP3Player.Sample
         private volatile StreamingPlaybackState _playbackState;
         private readonly object _repositionLocker = new object();
         private volatile bool _fullyDownloaded;
-        private const int MaxBufferSizeSeconds = 20;
+        private const int MaxBufferSizeSeconds = 50;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
@@ -231,12 +231,9 @@ namespace MP3Player.Sample
         {
             if (_playbackState != StreamingPlaybackState.Stopped)
             {
-                if (!_fullyDownloaded)
-                {
-                    _reader?.Dispose();
-                }
-
                 _playbackState = StreamingPlaybackState.Stopped;
+                _reader?.Dispose();
+
                 if (WavePlayer != null)
                 {
                     WavePlayer.Stop();
@@ -265,6 +262,7 @@ namespace MP3Player.Sample
 
                         _bufferedWaveProvider.ClearBuffer();
                         _reader.Position = Position;
+                        _fullyDownloaded = false;
                     }
                 }
                 CurrentTime = TimeSpan.FromSeconds((double)Position / Mp3WaveFormat.AverageBytesPerSecond);
@@ -286,7 +284,7 @@ namespace MP3Player.Sample
         private void StreamMp3()
         {
             _fullyDownloaded = false;
-            var buffer = new byte[16384 * MaxBufferSizeSeconds]; // needs to be big enough to hold a decompressed frame
+            var buffer = new byte[16384 * 4]; // needs to be big enough to hold a decompressed frame
             IMp3FrameDecompressor deCompressor = null;
 
             try
@@ -329,7 +327,11 @@ namespace MP3Player.Sample
                                 }
                                 else // end of stream
                                 {
-                                    throw new EndOfStreamException("Stream fully loaded");
+                                    _fullyDownloaded = true;
+                                    if (_bufferedWaveProvider.BufferedBytes == 0)
+                                    {
+                                        break;
+                                    }
                                 }
                             }
                         }
@@ -337,12 +339,12 @@ namespace MP3Player.Sample
                         {
                             _fullyDownloaded = true;
                             // reached the end of the MP3 file / stream
-                            break;
+                            // break;
                         }
                         catch (WebException)
                         {
                             // probably we have aborted download from the GUI thread
-                            break;
+                            // break;
                         }
                     }
 
@@ -366,13 +368,15 @@ namespace MP3Player.Sample
             }
             finally
             {
-                _reader?.Dispose();
+                _fullyDownloaded = true;
                 deCompressor?.Dispose();
             }
         }
         private IMp3FrameDecompressor CreateFrameDeCompressor(Mp3Frame frame)
         {
-            Mp3WaveFormat = new Mp3WaveFormat(frame.SampleRate, frame.ChannelMode == ChannelMode.Mono ? 1 : 2, frame.FrameLength, frame.BitRate);
+            Mp3WaveFormat = new Mp3WaveFormat(frame.SampleRate, 
+                frame.ChannelMode == ChannelMode.Mono ? 1 : 2, 
+                frame.FrameLength, frame.BitRate);
             return new AcmMp3FrameDecompressor(Mp3WaveFormat);
         }
         private void ShowBufferState(double totalSeconds)
