@@ -156,6 +156,24 @@ namespace MP3Player
             return request.GetResponse().ContentLength;
         }
 
+        public bool IsFullyLoaded()
+        {
+            if (_cache?.Length > 0)
+            {
+                foreach (var aByte in _cache)
+                {
+                    if (aByte.HasValue == false)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
         protected override void Dispose(bool disposing)
         {
             if (disposing)
