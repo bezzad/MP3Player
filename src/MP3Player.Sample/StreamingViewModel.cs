@@ -51,7 +51,7 @@ namespace MP3Player.Sample
             SetTitle("File Not Loaded");
             SpeedCommand = new RelayCommand(OnChangedSpeed);
             IsStreaming = true;
-            InputPath = "https://file-examples-com.github.io/uploads/2017/11/file_example_MP3_5MG.mp3";
+            InputPath = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3";
         }
 
         private void OnChangedSpeed()
