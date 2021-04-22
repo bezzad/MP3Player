@@ -69,6 +69,8 @@ namespace MP3Player
         {
             if (CanSeek)
             {
+                _readAheadLength = 0;
+                _readAheadOffset = 0;
                 return _pos = _sourceStream.Seek(offset, origin);
             }
 
