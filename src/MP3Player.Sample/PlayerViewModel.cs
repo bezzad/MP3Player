@@ -15,7 +15,6 @@ namespace MP3Player.Sample
         protected DispatcherTimer PlayerTimer { get; } = new DispatcherTimer();
         protected IWavePlayer WavePlayer { get; set; }
         protected VolumeWaveProvider16 VolumeProvider { get; set; }
-        protected string DefaultDecompressionFormat { get; set; }
         protected string AppBaseTitle { get; set; } = "MP3 Player";
         public string AppTitle { get; private set; }
         public string InputPath { get; set; }
