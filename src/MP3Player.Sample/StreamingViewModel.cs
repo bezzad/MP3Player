@@ -93,6 +93,19 @@ namespace MP3Player.Sample
         {
             base.UpdatePlayerState();
             OnPropertyChanged(nameof(IsBuffering));
+
+            if (_playbackState == StreamingPlaybackState.Playing)
+            {
+                TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
+            }
+            else if (_playbackState == StreamingPlaybackState.Paused)
+            {
+                TaskbarOverlay= (ImageSource)Application.Current.FindResource("PauseImage");
+            }
+            else
+            {
+                TaskbarOverlay = null;
+            }
         }
 
         protected override void OpenFile()
@@ -120,7 +133,6 @@ namespace MP3Player.Sample
                 _playbackState = StreamingPlaybackState.Paused;
 
                 UpdatePlayerState();
-                TaskbarOverlay = (ImageSource)Application.Current.FindResource("PauseImage");
                 SetTitle("Pause " + Path.GetFileName(InputPath));
             }
         }
@@ -155,13 +167,12 @@ namespace MP3Player.Sample
             }
 
             UpdatePlayerState();
-            TaskbarOverlay = (ImageSource)Application.Current.FindResource("PlayImage");
             SetTitle("Playing " + Path.GetFileName(InputPath));
         }
         protected override void Stop()
         {
             StopPlayback();
-            TaskbarOverlay = null;
+            UpdatePlayerState();
             Position = 0;
             SetTitle(Path.GetFileName(InputPath));
         }
@@ -273,6 +284,7 @@ namespace MP3Player.Sample
         private void OpenMp3File(string path)
         {
             var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
+            //_reader = new AudioSecureStream(fileStream, "H9YvIE8y1iyzcLK6aFgAxQ==");
             _reader = new ReadFullyStream(fileStream, fileStream.Length);
             StreamMp3();
         }
@@ -374,8 +386,8 @@ namespace MP3Player.Sample
         }
         private IMp3FrameDecompressor CreateFrameDeCompressor(Mp3Frame frame)
         {
-            Mp3WaveFormat = new Mp3WaveFormat(frame.SampleRate, 
-                frame.ChannelMode == ChannelMode.Mono ? 1 : 2, 
+            Mp3WaveFormat = new Mp3WaveFormat(frame.SampleRate,
+                frame.ChannelMode == ChannelMode.Mono ? 1 : 2,
                 frame.FrameLength, frame.BitRate);
             return new AcmMp3FrameDecompressor(Mp3WaveFormat);
         }
