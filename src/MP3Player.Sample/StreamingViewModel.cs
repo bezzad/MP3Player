@@ -171,7 +171,22 @@ namespace MP3Player.Sample
         }
         protected override void Stop()
         {
-            StopPlayback();
+            if (_playbackState != StreamingPlaybackState.Stopped)
+            {
+                _playbackState = StreamingPlaybackState.Stopped;
+                _reader?.Dispose();
+
+                if (WavePlayer != null)
+                {
+                    WavePlayer.Stop();
+                    WavePlayer.Dispose();
+                    WavePlayer = null;
+                }
+                PlayerTimer.Stop();
+                // n.b. streaming thread may not yet have exited
+                Thread.Sleep(500);
+                ShowBufferState(0);
+            }
             UpdatePlayerState();
             Position = 0;
             SetTitle(Path.GetFileName(InputPath));
@@ -210,7 +225,7 @@ namespace MP3Player.Sample
                         else if (_fullyDownloaded && bufferedSeconds == 0)
                         {
                             Debug.WriteLine("Reached end of stream");
-                            StopPlayback();
+                            Stop();
                         }
                     }
                     UpdatePlayerState();
@@ -221,7 +236,6 @@ namespace MP3Player.Sample
                 PositionChanging = false;
             }
         }
-
         private void UpdatePosition()
         {
             if (_reader != null)
@@ -235,26 +249,6 @@ namespace MP3Player.Sample
                     Position = newPos < 0 ? _reader.Position : newPos;
                     OnPropertyChanged(nameof(PositionPercent));
                 }
-            }
-        }
-
-        private void StopPlayback()
-        {
-            if (_playbackState != StreamingPlaybackState.Stopped)
-            {
-                _playbackState = StreamingPlaybackState.Stopped;
-                _reader?.Dispose();
-
-                if (WavePlayer != null)
-                {
-                    WavePlayer.Stop();
-                    WavePlayer.Dispose();
-                    WavePlayer = null;
-                }
-                PlayerTimer.Stop();
-                // n.b. streaming thread may not yet have exited
-                Thread.Sleep(500);
-                ShowBufferState(0);
             }
         }
 
@@ -398,7 +392,7 @@ namespace MP3Player.Sample
 
         public override void Dispose()
         {
-            StopPlayback();
+            Stop();
             base.Dispose();
         }
     }
