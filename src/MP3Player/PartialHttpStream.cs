@@ -75,7 +75,7 @@ namespace MP3Player
             int bytesRead = 0;
             while (bytesRead < count)
             {
-                if (_cache?[Position] != null)
+                if (_cache != null && _cache.Length > _position && _cache[_position] != null)
                 {
                     buffer[offset + bytesRead++] = _cache[_position++].Value;
                 }
