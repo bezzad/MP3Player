@@ -347,11 +347,6 @@ namespace MP3Player.Sample
                             // reached the end of the MP3 file / stream
                             // break;
                         }
-                        catch (WebException)
-                        {
-                            // probably we have aborted download from the GUI thread
-                            // break;
-                        }
                     }
 
                 } while (_playbackState != StreamingPlaybackState.Stopped);
@@ -361,12 +356,9 @@ namespace MP3Player.Sample
                 // we are hanging on response stream .Dispose so never get there
                 deCompressor?.Dispose();
             }
-            catch (WebException e)
+            catch (WebException e) when (e.Status == WebExceptionStatus.RequestCanceled)
             {
-                if (e.Status != WebExceptionStatus.RequestCanceled)
-                {
-                    Dispatcher.CurrentDispatcher.BeginInvoke(() => MessageBox.Show(e.Message));
-                }
+                // ignored cancel exceptions
             }
             catch (Exception e)
             {
