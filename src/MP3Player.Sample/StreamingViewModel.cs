@@ -25,7 +25,7 @@ namespace MP3Player.Sample
         private volatile StreamingPlaybackState _playbackState;
         private readonly object _repositionLocker = new object();
         private volatile bool _fullyDownloaded;
-        private const int MaxBufferSizeSeconds = 50;
+        private const int MaxBufferSizeSeconds = 30;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
@@ -308,35 +308,37 @@ namespace MP3Player.Sample
                         {
                             lock (_repositionLocker)
                             {
-                                var frame = Mp3Frame.LoadFromStream(_reader);
-                                if (frame != null)
+                                if (deCompressor == null)
                                 {
-                                    if (deCompressor == null)
-                                    {
-                                        // don't think these details matter too much - just help ACM select the right codec
-                                        // however, the buffered provider doesn't know what sample rate it is working at
-                                        // until we have a frame
-                                        deCompressor = CreateFrameDeCompressor(frame);
-                                        _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
-                                            // allow us to get well ahead of ourselves
-                                            BufferDuration = TimeSpan.FromSeconds(MaxBufferSizeSeconds),
-                                            DiscardOnBufferOverflow = true,
-                                            ReadFully = true
-                                        };
-                                        MaxPosition = _reader.Length;
-                                        Duration = TimeSpan.FromSeconds((double)_reader.Length /
-                                                                        Mp3WaveFormat.AverageBytesPerSecond);
-                                    }
-
-                                    int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
-                                    _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
+                                    // don't think these details matter too much - just help ACM select the right codec
+                                    // however, the buffered provider doesn't know what sample rate it is working at
+                                    // until we have a frame
+                                    deCompressor = CreateFrameDeCompressor();
+                                    _bufferedWaveProvider = new BufferedWaveProvider(deCompressor.OutputFormat) {
+                                        // allow us to get well ahead of ourselves
+                                        BufferDuration = TimeSpan.FromSeconds(MaxBufferSizeSeconds),
+                                        DiscardOnBufferOverflow = true,
+                                        ReadFully = true
+                                    };
+                                    MaxPosition = _reader.Length;
+                                    Duration = TimeSpan.FromSeconds((double)_reader.Length /
+                                                                    Mp3WaveFormat.AverageBytesPerSecond);
                                 }
-                                else // end of stream
+                                else
                                 {
-                                    _fullyDownloaded = true;
-                                    if (_bufferedWaveProvider.BufferedBytes == 0)
+                                    var frame = Mp3Frame.LoadFromStream(_reader);
+                                    if (frame != null)
                                     {
-                                        break;
+                                        int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
+                                        _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
+                                    }
+                                    else // end of stream
+                                    {
+                                        _fullyDownloaded = true;
+                                        if (_bufferedWaveProvider.BufferedBytes == 0)
+                                        {
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -370,11 +372,55 @@ namespace MP3Player.Sample
                 deCompressor?.Dispose();
             }
         }
-        private IMp3FrameDecompressor CreateFrameDeCompressor(Mp3Frame frame)
+        private IMp3FrameDecompressor CreateFrameDeCompressor()
         {
-            Mp3WaveFormat = new Mp3WaveFormat(frame.SampleRate,
-                frame.ChannelMode == ChannelMode.Mono ? 1 : 2,
-                frame.FrameLength, frame.BitRate);
+            if (_reader == null)
+                throw new ArgumentNullException(nameof(_reader));
+
+            Id3v2Tag.ReadTag(_reader); // read tag data in from begin of stream
+            
+            var dataStartPosition = _reader.Position;
+            var firstFrame = Mp3Frame.LoadFromStream(_reader);
+            if (firstFrame == null)
+                throw new InvalidDataException("Invalid MP3 file - no MP3 Frames Detected");
+            double bitRate = firstFrame.BitRate;
+            var xingHeader = XingHeader.LoadXingHeader(firstFrame);
+            // If the header exists, we can skip over it when decoding the rest of the file
+            if (xingHeader != null)
+                dataStartPosition = _reader.Position;
+
+            // workaround for a longstanding issue with some files failing to load
+            // because they report a spurious sample rate change
+            var secondFrame = Mp3Frame.LoadFromStream(_reader);
+            if (secondFrame != null &&
+                (secondFrame.SampleRate != firstFrame.SampleRate ||
+                 secondFrame.ChannelMode != firstFrame.ChannelMode))
+            {
+                // assume that the first frame was some kind of VBR/LAME header that we failed to recognise properly
+                dataStartPosition = secondFrame.FileOffset;
+                // forget about the first frame, the second one is the first one we really care about
+                firstFrame = secondFrame;
+            }
+
+            var mp3DataLength = _reader.Length - dataStartPosition;
+            
+            // try for an ID3v1 tag as well
+            _reader.Position = _reader.Length - 128;
+            byte[] tag = new byte[128];
+            _reader.Read(tag, 0, 128);
+            if (tag[0] == 'T' && tag[1] == 'A' && tag[2] == 'G')
+            {
+                //id3v2Tag = tag;
+                mp3DataLength -= 128;
+            }
+
+            _reader.Position = dataStartPosition;
+
+            // create a temporary MP3 format before we know the real bitrate
+            Mp3WaveFormat = new Mp3WaveFormat(firstFrame.SampleRate,
+                firstFrame.ChannelMode == ChannelMode.Mono ? 1 : 2,
+                firstFrame.FrameLength, (int)bitRate);
+
             return new AcmMp3FrameDecompressor(Mp3WaveFormat);
         }
         private void ShowBufferState(double totalSeconds)

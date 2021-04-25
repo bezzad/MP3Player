@@ -105,7 +105,8 @@ namespace MP3Player.Wave.WaveStreams
 
                 // create a temporary MP3 format before we know the real bitrate
                 Mp3WaveFormat = new Mp3WaveFormat(firstFrame.SampleRate,
-                    firstFrame.ChannelMode == ChannelMode.Mono ? 1 : 2, firstFrame.FrameLength, (int)bitRate);
+                    firstFrame.ChannelMode == ChannelMode.Mono ? 1 : 2, 
+                    firstFrame.FrameLength, (int)bitRate);
 
                 CreateTableOfContents();
                 _tocIndex = 0;
@@ -392,7 +393,7 @@ namespace MP3Player.Wave.WaveStreams
                         }
                         else
                         {
-                            // no lefovers
+                            // no leftovers
                             _decompressBufferOffset = 0;
                             _decompressLeftovers = 0;
                         }

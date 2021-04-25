@@ -5,6 +5,7 @@ namespace MP3Player
 {
     public class ReadFullyStream : Stream
     {
+        private const int BufferSize = 65536;
         private readonly Stream _sourceStream;
         private long _pos; // psuedo-position
         private readonly byte[] _readAheadBuffer;
@@ -15,7 +16,7 @@ namespace MP3Player
         {
             _sourceStream = sourceStream;
             Length = contentLength;
-            _readAheadBuffer = new byte[4096];
+            _readAheadBuffer = new byte[BufferSize];
         }
         public override bool CanRead => _sourceStream.CanRead;
 
@@ -35,8 +36,7 @@ namespace MP3Player
             get => _pos;
             set => Seek(value, SeekOrigin.Begin);
         }
-
-
+        
         public override int Read(byte[] buffer, int offset, int count)
         {
             int bytesRead = 0;
