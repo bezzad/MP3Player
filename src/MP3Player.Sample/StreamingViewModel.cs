@@ -23,7 +23,7 @@ namespace MP3Player.Sample
         private Stream _reader;
         private volatile StreamingPlaybackState _playbackState;
         private byte[] _decompressBuffer;
-        private long dataStartPosition;
+        private long _dataStartPosition;
         private readonly object _repositionLocker = new object();
         private volatile bool _fullyDownloaded;
         private const int MaxBufferSizeSeconds = 30;
@@ -246,7 +246,7 @@ namespace MP3Player.Sample
                     PositionChanging = true;
                     var outputBufferedDuration = _bufferedWaveProvider?.BufferedDuration ?? new TimeSpan(0);
                     var inputBufferedBytes = outputBufferedDuration.TotalSeconds * (Mp3WaveFormat?.AverageBytesPerSecond ?? 0);
-                    var newPos = Math.Min(MaxPosition, _reader.Position - (long)inputBufferedBytes - dataStartPosition);
+                    var newPos = Math.Min(MaxPosition, _reader.Position - (long)inputBufferedBytes - _dataStartPosition);
                     Position = newPos < 0 ? _reader.Position : newPos;
                     OnPropertyChanged(nameof(PositionPercent));
                 }
@@ -267,7 +267,7 @@ namespace MP3Player.Sample
                         }
 
                         _bufferedWaveProvider.ClearBuffer();
-                        _reader.Position = Position + dataStartPosition;
+                        _reader.Position = Position + _dataStartPosition;
                         _fullyDownloaded = false;
                     }
                 }
@@ -375,7 +375,7 @@ namespace MP3Player.Sample
 
             Id3v2Tag.ReadTag(_reader); // read tag data in from begin of stream
             
-            dataStartPosition = _reader.Position;
+            _dataStartPosition = _reader.Position;
             var firstFrame = Mp3Frame.LoadFromStream(_reader);
             if (firstFrame == null)
                 throw new InvalidDataException("Invalid MP3 file - no MP3 Frames Detected");
@@ -383,7 +383,7 @@ namespace MP3Player.Sample
             var xingHeader = XingHeader.LoadXingHeader(firstFrame);
             // If the header exists, we can skip over it when decoding the rest of the file
             if (xingHeader != null)
-                dataStartPosition = _reader.Position;
+                _dataStartPosition = _reader.Position;
 
             // workaround for a longstanding issue with some files failing to load
             // because they report a spurious sample rate change
@@ -393,7 +393,7 @@ namespace MP3Player.Sample
                  secondFrame.ChannelMode != firstFrame.ChannelMode))
             {
                 // assume that the first frame was some kind of VBR/LAME header that we failed to recognise properly
-                dataStartPosition = secondFrame.FileOffset;
+                _dataStartPosition = secondFrame.FileOffset;
                 // forget about the first frame, the second one is the first one we really care about
                 firstFrame = secondFrame;
             }
@@ -412,7 +412,7 @@ namespace MP3Player.Sample
             // some MP3s I seem to get double
             _decompressBuffer = new byte[bytesPerDecodedFrame * 2];
 
-            MaxPosition = _reader.Length - dataStartPosition;
+            MaxPosition = _reader.Length - _dataStartPosition;
             Duration = TimeSpan.FromSeconds((double)MaxPosition / Mp3WaveFormat.AverageBytesPerSecond);
 
             return decompressor;
