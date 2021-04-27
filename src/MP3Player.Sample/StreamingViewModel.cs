@@ -267,7 +267,8 @@ namespace MP3Player.Sample
                         }
 
                         _bufferedWaveProvider.ClearBuffer();
-                        _reader.Position = Position + _dataStartPosition;
+                        // go to the begin of nearest frame
+                        _reader.Position = Position + _dataStartPosition - (Position % Mp3WaveFormat.blockSize);
                         _fullyDownloaded = false;
                     }
                 }
@@ -354,13 +355,16 @@ namespace MP3Player.Sample
                 // we are hanging on response stream .Dispose so never get there
                 deCompressor?.Dispose();
             }
-            catch (WebException e) when (e.Status == WebExceptionStatus.RequestCanceled)
+            catch (WebException e) 
+                when (e.Status == WebExceptionStatus.RequestCanceled)
             {
                 // ignored cancel exceptions
+                Stop();
             }
             catch (Exception e)
             {
                 Debug.WriteLine(e.Message);
+                Stop();
             }
             finally
             {
@@ -404,14 +408,7 @@ namespace MP3Player.Sample
                 firstFrame.FrameLength, (int)bitRate);
 
             var decompressor = new AcmMp3FrameDecompressor(Mp3WaveFormat);
-            var bytesPerSample = (decompressor.OutputFormat.BitsPerSample) / 8 * decompressor.OutputFormat.Channels;
-
-            // no MP3 frames have more than 1152 samples in them
-            var bytesPerDecodedFrame = 1152 * bytesPerSample;
-
-            // some MP3s I seem to get double
-            _decompressBuffer = new byte[bytesPerDecodedFrame * 2];
-
+            _decompressBuffer = new byte[16384 * 4]; // needs to be big enough to hold a decompressed frame
             MaxPosition = _reader.Length - _dataStartPosition;
             Duration = TimeSpan.FromSeconds((double)MaxPosition / Mp3WaveFormat.AverageBytesPerSecond);
 
