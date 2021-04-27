@@ -246,7 +246,7 @@ namespace MP3Player.Sample
                     PositionChanging = true;
                     var outputBufferedDuration = _bufferedWaveProvider?.BufferedDuration ?? new TimeSpan(0);
                     var inputBufferedBytes = outputBufferedDuration.TotalSeconds * (Mp3WaveFormat?.AverageBytesPerSecond ?? 0);
-                    var newPos = Math.Min(MaxPosition, _reader.Position - (long)inputBufferedBytes);
+                    var newPos = Math.Min(MaxPosition, _reader.Position - (long)inputBufferedBytes - dataStartPosition);
                     Position = newPos < 0 ? _reader.Position : newPos;
                     OnPropertyChanged(nameof(PositionPercent));
                 }
@@ -267,7 +267,7 @@ namespace MP3Player.Sample
                         }
 
                         _bufferedWaveProvider.ClearBuffer();
-                        _reader.Position = Position;
+                        _reader.Position = Position + dataStartPosition;
                         _fullyDownloaded = false;
                     }
                 }
@@ -319,9 +319,6 @@ namespace MP3Player.Sample
                                         DiscardOnBufferOverflow = true,
                                         ReadFully = true
                                     };
-                                    MaxPosition = _reader.Length;
-                                    Duration = TimeSpan.FromSeconds((double)_reader.Length /
-                                                                    Mp3WaveFormat.AverageBytesPerSecond);
                                 }
                                 else
                                 {
@@ -414,6 +411,9 @@ namespace MP3Player.Sample
 
             // some MP3s I seem to get double
             _decompressBuffer = new byte[bytesPerDecodedFrame * 2];
+
+            MaxPosition = _reader.Length - dataStartPosition;
+            Duration = TimeSpan.FromSeconds((double)MaxPosition / Mp3WaveFormat.AverageBytesPerSecond);
 
             return decompressor;
         }
