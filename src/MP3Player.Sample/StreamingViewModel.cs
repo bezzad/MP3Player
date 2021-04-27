@@ -174,6 +174,8 @@ namespace MP3Player.Sample
         {
             if (_playbackState != StreamingPlaybackState.Stopped)
             {
+                PlayerTimer.Stop(); // Note: stop timer before changing state
+                Thread.Sleep(500);
                 _playbackState = StreamingPlaybackState.Stopped;
                 _reader?.Dispose();
 
@@ -183,7 +185,6 @@ namespace MP3Player.Sample
                     WavePlayer.Dispose();
                     WavePlayer = null;
                 }
-                PlayerTimer.Stop();
                 // n.b. streaming thread may not yet have exited
                 Thread.Sleep(500);
                 ShowBufferState(0);
