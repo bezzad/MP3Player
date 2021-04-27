@@ -19,6 +19,7 @@ namespace MP3Player
         private byte?[] _cache;
         private readonly HttpClient _httpClient;
         private Stream _sourceStream;
+        private readonly object _repositionLock = new object();
 
         public string Url { get; }
         public override bool CanRead => true;
@@ -65,6 +66,8 @@ namespace MP3Player
 
         public override int Read(byte[] buffer, int offset, int count)
         {
+            int bytesRead = 0;
+
             if (buffer == null)
                 throw new ArgumentNullException(nameof(buffer));
             if (offset < 0 || offset >= buffer.Length)
@@ -72,30 +75,34 @@ namespace MP3Player
             if (count < 0 || offset + count > buffer.Length)
                 throw new ArgumentOutOfRangeException(nameof(count));
 
-            int bytesRead = 0;
-            while (bytesRead < count)
+            lock (_repositionLock)
             {
-                if (_cache != null && _cache.Length > _position && _cache[_position] != null)
+                while (bytesRead < count)
                 {
-                    buffer[offset + bytesRead++] = _cache[_position++].Value;
-                }
-                else
-                {
-                    SetStreamPosition(Position);
-                    _readAheadLength = _sourceStream.Read(_readAheadBuffer, 0, _readAheadBuffer.Length);
-                    _streamPosition += _readAheadLength;
-                    if (_readAheadLength == 0)
+                    if (_cache != null && _cache.Length > _position && _cache[_position] != null)
                     {
-                        break;
+                        buffer[offset + bytesRead++] = _cache[_position].Value;
+                        _position++;
                     }
-                    // write to cache
-                    _readAheadBuffer.Copy(0, _cache, _position, _readAheadLength);
+                    else
+                    {
+                        SetStreamPosition(Position);
+                        _readAheadLength = _sourceStream.Read(_readAheadBuffer, 0, _readAheadBuffer.Length);
+                        _streamPosition += _readAheadLength;
+                        if (_readAheadLength == 0)
+                        {
+                            break;
+                        }
+
+                        // write to cache
+                        _readAheadBuffer.Copy(0, _cache, _position, _readAheadLength);
+                    }
                 }
             }
 
             return bytesRead;
         }
-        
+
         private void SetStreamPosition(long pos)
         {
             if (_sourceStream == null || _streamPosition != pos)
@@ -120,22 +127,25 @@ namespace MP3Player
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            switch (origin)
+            lock (_repositionLock)
             {
-                case SeekOrigin.End:
-                    _position = Length + offset;
-                    break;
+                switch (origin)
+                {
+                    case SeekOrigin.End:
+                        _position = Length + offset;
+                        break;
 
-                case SeekOrigin.Begin:
-                    _position = offset;
-                    break;
+                    case SeekOrigin.Begin:
+                        _position = offset;
+                        break;
 
-                case SeekOrigin.Current:
-                    _position += offset;
-                    break;
+                    case SeekOrigin.Current:
+                        _position += offset;
+                        break;
+                }
+
+                return Position;
             }
-
-            return Position;
         }
 
         public override void SetLength(long value)
