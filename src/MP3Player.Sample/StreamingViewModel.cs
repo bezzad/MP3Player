@@ -14,7 +14,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 
 namespace MP3Player.Sample
 {
@@ -23,6 +22,8 @@ namespace MP3Player.Sample
         private BufferedWaveProvider _bufferedWaveProvider;
         private Stream _reader;
         private volatile StreamingPlaybackState _playbackState;
+        private byte[] _decompressBuffer;
+        private long dataStartPosition;
         private readonly object _repositionLocker = new object();
         private volatile bool _fullyDownloaded;
         private const int MaxBufferSizeSeconds = 30;
@@ -278,7 +279,6 @@ namespace MP3Player.Sample
         private void OpenMp3File(string path)
         {
             var fileStream = new FileStream(path, FileMode.Open, FileAccess.Read);
-            //_reader = new AudioSecureStream(fileStream, "H9YvIE8y1iyzcLK6aFgAxQ==");
             _reader = new ReadFullyStream(fileStream, fileStream.Length);
             StreamMp3();
         }
@@ -290,7 +290,6 @@ namespace MP3Player.Sample
         private void StreamMp3()
         {
             _fullyDownloaded = false;
-            var buffer = new byte[16384 * 4]; // needs to be big enough to hold a decompressed frame
             IMp3FrameDecompressor deCompressor = null;
 
             try
@@ -329,8 +328,8 @@ namespace MP3Player.Sample
                                     var frame = Mp3Frame.LoadFromStream(_reader);
                                     if (frame != null)
                                     {
-                                        int decompressed = deCompressor.DecompressFrame(frame, buffer, 0);
-                                        _bufferedWaveProvider.AddSamples(buffer, 0, decompressed);
+                                        int decompressed = deCompressor.DecompressFrame(frame, _decompressBuffer, 0);
+                                        _bufferedWaveProvider.AddSamples(_decompressBuffer, 0, decompressed);
                                     }
                                     else // end of stream
                                     {
@@ -379,7 +378,7 @@ namespace MP3Player.Sample
 
             Id3v2Tag.ReadTag(_reader); // read tag data in from begin of stream
             
-            var dataStartPosition = _reader.Position;
+            dataStartPosition = _reader.Position;
             var firstFrame = Mp3Frame.LoadFromStream(_reader);
             if (firstFrame == null)
                 throw new InvalidDataException("Invalid MP3 file - no MP3 Frames Detected");
@@ -402,26 +401,21 @@ namespace MP3Player.Sample
                 firstFrame = secondFrame;
             }
 
-            var mp3DataLength = _reader.Length - dataStartPosition;
-            
-            // try for an ID3v1 tag as well
-            _reader.Position = _reader.Length - 128;
-            byte[] tag = new byte[128];
-            _reader.Read(tag, 0, 128);
-            if (tag[0] == 'T' && tag[1] == 'A' && tag[2] == 'G')
-            {
-                //id3v2Tag = tag;
-                mp3DataLength -= 128;
-            }
-
-            _reader.Position = dataStartPosition;
-
             // create a temporary MP3 format before we know the real bitrate
             Mp3WaveFormat = new Mp3WaveFormat(firstFrame.SampleRate,
                 firstFrame.ChannelMode == ChannelMode.Mono ? 1 : 2,
                 firstFrame.FrameLength, (int)bitRate);
 
-            return new AcmMp3FrameDecompressor(Mp3WaveFormat);
+            var decompressor = new AcmMp3FrameDecompressor(Mp3WaveFormat);
+            var bytesPerSample = (decompressor.OutputFormat.BitsPerSample) / 8 * decompressor.OutputFormat.Channels;
+
+            // no MP3 frames have more than 1152 samples in them
+            var bytesPerDecodedFrame = 1152 * bytesPerSample;
+
+            // some MP3s I seem to get double
+            _decompressBuffer = new byte[bytesPerDecodedFrame * 2];
+
+            return decompressor;
         }
         private void ShowBufferState(double totalSeconds)
         {
