@@ -108,7 +108,9 @@ namespace MP3Player.Utils
         public static void Copy(this byte[] sourceArray, long sourceIndex, byte?[] destinationArray, long destinationIndex, long length)
         {
             long offset = 0;
-            while (offset < length)
+            while (offset < length &&
+                   destinationIndex + offset < destinationArray.Length &&
+                   sourceIndex + offset < sourceArray.Length)
             {
                 destinationArray[destinationIndex + offset] = sourceArray[sourceIndex + offset];
                 offset++;

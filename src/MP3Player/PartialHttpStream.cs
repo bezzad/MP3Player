@@ -161,9 +161,10 @@ namespace MP3Player
 
         private long HttpGetLength()
         {
-            HttpWebRequest request = WebRequest.CreateHttp(Url);
+            var request = WebRequest.CreateHttp(Url);
             request.Method = "GET";
-            return request.GetResponse().ContentLength;
+            using var resp = request.GetResponse();
+            return resp.ContentLength;
         }
 
         public bool IsFullyLoaded()
