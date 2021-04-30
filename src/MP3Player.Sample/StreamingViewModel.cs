@@ -27,6 +27,7 @@ namespace MP3Player.Sample
         private readonly object _repositionLocker = new object();
         private volatile bool _fullyDownloaded;
         private const int MaxBufferSizeSeconds = 30;
+        private Task _playerTask = null;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
@@ -153,11 +154,11 @@ namespace MP3Player.Sample
                 // streaming play from HTTP protocol
                 if (InputPath.StartsWith("http", StringComparison.OrdinalIgnoreCase))
                 {
-                    Task.Run(() => DownloadMp3(InputPath));
+                    _playerTask = Task.Run(() => DownloadMp3(InputPath));
                 }
                 else // streaming play from File protocol
                 {
-                    Task.Run(() => OpenMp3File(InputPath));
+                    _playerTask = Task.Run(() => OpenMp3File(InputPath));
                 }
 
                 PlayerTimer.Start();
@@ -172,12 +173,14 @@ namespace MP3Player.Sample
         }
         protected override void Stop()
         {
+            Debug.WriteLine($"{nameof(Stop)}() when {_playbackState}");
             if (_playbackState != StreamingPlaybackState.Stopped)
             {
-                PlayerTimer.Stop(); // Note: stop timer before changing state
-                Thread.Sleep(500);
                 _playbackState = StreamingPlaybackState.Stopped;
+                PlayerTimer.Stop(); // Note: stop timer before changing state
+                _playerTask?.Wait();
                 _reader?.Dispose();
+                _bufferedWaveProvider = null;
 
                 if (WavePlayer != null)
                 {
@@ -185,8 +188,6 @@ namespace MP3Player.Sample
                     WavePlayer.Dispose();
                     WavePlayer = null;
                 }
-                // n.b. streaming thread may not yet have exited
-                Thread.Sleep(500);
                 ShowBufferState(0);
             }
             UpdatePlayerState();
@@ -262,12 +263,7 @@ namespace MP3Player.Sample
                 {
                     if (PositionChanging == false) // position changed with timer so _reader is up to date
                     {
-                        if (_reader is PartialHttpStream)
-                        {
-                            _playbackState = StreamingPlaybackState.Buffering;
-                        }
-
-                        _bufferedWaveProvider.ClearBuffer();
+                        _bufferedWaveProvider?.ClearBuffer();
                         // go to the begin of nearest frame
                         _reader.Position = Position + _dataStartPosition - (Position % Mp3WaveFormat.blockSize);
                         _fullyDownloaded = false;
