@@ -26,8 +26,8 @@ namespace MP3Player.Sample
         private long _dataStartPosition;
         private readonly object _repositionLocker = new object();
         private volatile bool _fullyDownloaded;
-        private const int MaxBufferSizeSeconds = 30;
-        private Task _playerTask = null;
+        private const int MaxBufferSizeSeconds = 90;
+        private Task _playerTask;
         [AlsoNotifyFor(nameof(SpeedNormal), nameof(SpeedFast), nameof(SpeedFastest))]
         private Speed SpeedState { get; set; } = Speed.Normal;
         private bool IsBufferNearlyFull =>
