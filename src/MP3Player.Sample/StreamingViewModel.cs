@@ -180,7 +180,6 @@ namespace MP3Player.Sample
                 PlayerTimer.Stop(); // Note: stop timer before changing state
                 _playerTask?.Wait();
                 _reader?.Dispose();
-                _bufferedWaveProvider = null;
 
                 if (WavePlayer != null)
                 {
