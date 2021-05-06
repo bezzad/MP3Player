@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
+using MP3Player.Wasapi.CoreAudioApi;
 using MP3Player.Wave.WaveOutputs;
 using MP3Player.Wave.WaveProviders;
 using MP3Player.Wave.WinMM;
@@ -12,6 +14,7 @@ namespace MP3Player.Sample
     public abstract class PlayerViewModel : ViewModel
     {
         protected volatile bool PositionChanging;
+        protected MMDevice CurrentDevice { get; set; }
         protected DispatcherTimer PlayerTimer { get; } = new DispatcherTimer();
         protected IWavePlayer WavePlayer { get; set; }
         protected VolumeWaveProvider16 VolumeProvider { get; set; }
@@ -46,6 +49,28 @@ namespace MP3Player.Sample
             BackwardCommand = new RelayCommand(OnBackward);
             PlayerTimer.Interval = TimeSpan.FromMilliseconds(500);
             PlayerTimer.Tick += OnTick;
+            SetCurrentDevice();
+        }
+
+        private void SetCurrentDevice()
+        {
+            var deviceEnumerator = new MMDeviceEnumerator();
+            var devices = deviceEnumerator.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active);
+            CurrentDevice = devices.FirstOrDefault();
+            if (CurrentDevice != null)
+            {
+                CurrentDevice.AudioEndpointVolume.OnVolumeNotification += AudioEndpointVolumeNotification;
+            }
+        }
+
+        protected virtual void AudioEndpointVolumeNotification(AudioVolumeNotificationData data)
+        {
+            if (data.Muted)
+            {
+                Pause();
+            }
+
+            Volume = CurrentDevice.AudioEndpointVolume.MasterVolumeLevelScalar * 100;
         }
 
         private void OnPlayPause()
