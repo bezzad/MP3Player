@@ -154,6 +154,8 @@ namespace MP3Player.Sample
         {
             Stop();
             WavePlayer?.Dispose();
+            CurrentDevice.AudioEndpointVolume.OnVolumeNotification -= AudioEndpointVolumeNotification;
+            CurrentDevice.Dispose();
         }
     }
 }
